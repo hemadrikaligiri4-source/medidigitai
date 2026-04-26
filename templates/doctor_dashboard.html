@@ -127,6 +127,22 @@
         background: rgba(230, 126, 80, 0.05);
     }
 
+    .sticky-sidebar {
+        position: sticky;
+        top: 6rem;
+        max-height: calc(100vh - 8rem);
+        overflow-y: auto;
+    }
+
+    .sticky-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sticky-sidebar::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
+    }
+
     /* Responsive Adjustments */
     @media screen and (max-width: 1024px) {
         .dashboard-grid {
@@ -274,7 +290,7 @@
     <div class="responsive-sidebar-layout"
         style="display: grid; grid-template-columns: 320px 1fr; gap: 2rem; min-height: calc(100vh - 120px);">
         <!-- Patient List Sidebar -->
-        <div class="glass-card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+        <div class="glass-card sticky-sidebar" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
             <div style="padding: 1.5rem; border-bottom: 1px solid var(--border);">
                 <h3 style="margin: 0 0 1rem 0; color: var(--dark);" data-i18n="patient_directory">Patient Directory</h3>
                 <div style="position: relative;">

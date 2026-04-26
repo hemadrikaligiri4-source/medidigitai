@@ -98,6 +98,20 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        position: sticky;
+        top: 6rem;
+        max-height: calc(100vh - 8rem);
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .sidebar-mini::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sidebar-mini::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
     }
 
     .sidebar-link {
@@ -1521,6 +1535,7 @@
     }
 
     function showTab(tab) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         document.getElementById('dashboard-tab').style.display = tab === 'dashboard' ? 'block' : 'none';
         document.getElementById('records-tab').style.display = tab === 'records' ? 'block' : 'none';
         document.getElementById('emergency-tab').style.display = tab === 'emergency' ? 'block' : 'none';

@@ -16,7 +16,18 @@
         padding: 1.5rem;
         height: fit-content;
         position: sticky;
-        top: 100px;
+        top: 6rem;
+        max-height: calc(100vh - 8rem);
+        overflow-y: auto;
+    }
+
+    .admin-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .admin-sidebar::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 10px;
     }
 
     .sidebar-nav {
@@ -472,6 +483,7 @@
     }
 
     function showSection(id) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         // Hide all sections
         ['trends', 'users', 'hospitals', 'reports'].forEach(s => {
             document.getElementById(s + '-section').style.display = 'none';
