@@ -1,0 +1,220 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="responsive-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <!-- Patient Registration -->
+    <div class="glass-card">
+        <h2 style="margin-bottom: 2rem; color: var(--dark);" data-i18n="patient_registration"><i
+                class="fas fa-user-plus" style="color: var(--primary); margin-right: 0.5rem;"></i> Patient Registration
+        </h2>
+        <form id="patient-form">
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 500; color: var(--text-dark); margin-bottom: 0.5rem; display: block;">Full
+                    Name</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="responsive-grid-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label>Age</label>
+                    <input type="number" name="age" required>
+                </div>
+                <div>
+                    <label>Gender</label>
+                    <select name="gender">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label>Contact Number</label>
+                <input type="text" name="contact" required>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label>Facial Photo (Capture/Upload)</label>
+                <input type="file" name="photo" accept="image/*" capture="user">
+            </div>
+            <div style="margin-bottom: 2rem; display: flex; gap: 0.5rem; align-items: center;">
+                <input type="checkbox" name="consent" id="consent-check" required style="width: auto;">
+                <label for="consent-check" style="font-size: 0.8rem; color: var(--text-dark);">
+                    Patient has provided explicit consent for digital record storage.
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="register_patient">Register
+                Patient</button>
+        </form>
+    </div>
+
+    <!-- Document Upload -->
+    <div class="glass-card">
+        <h2 style="margin-bottom: 2rem; color: var(--dark);" data-i18n="digitize_document"><i
+                class="fas fa-file-medical" style="color: var(--primary); margin-right: 0.5rem;"></i> Digitize Document
+        </h2>
+        <form id="record-form">
+            <div style="margin-bottom: 1rem;">
+                <label>Select Patient</label>
+                <select id="patient-select" name="patient_id" required>
+                    <option value="">Loading patients...</option>
+                </select>
+            </div>
+            <div class="responsive-grid-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label>Hospital Name</label>
+                    <input type="text" name="hospital_name" placeholder="Hospital...">
+                </div>
+                <div>
+                    <label>Treating Doctor</label>
+                    <input type="text" name="treating_doctor_name" placeholder="Dr. Name...">
+                </div>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label>Medical Document (Prescription/Report)</label>
+                <input type="file" name="document" accept="image/*" capture="environment" required>
+                <p style="font-size: 0.8rem; color: var(--text-dark); margin-top: 0.5rem;">OCR will automatically
+                    extract
+                    symptoms and medications.</p>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="upload_extract">Upload &
+                Extract</button>
+        </form>
+
+        <div id="ocr-results"
+            style="margin-top: 2rem; display: none; padding: 1rem; background: var(--cream); border-radius: 1rem; border: 1px solid var(--border);">
+            <h4 style="color: var(--primary);">Extracted Data Preview:</h4>
+            <div id="ocr-data"></div>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card" style="margin-top: 2rem; border: 1px solid rgba(239, 68, 68, 0.5); background: #FEF2F2;">
+    <h2 style="color: #991B1B;" data-i18n="emergency_coordination"><i class="fas fa-exclamation-triangle"></i> Emergency
+        Coordination</h2>
+    <p style="color: #7F1D1D;">Immediately broadcast an emergency request to all nearby available ambulances.</p>
+    <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+        <button id="emergency-btn" class="btn" style="background: #ef4444; color: white; padding: 1rem 2rem;"
+            data-i18n="request_ambulance_now">
+            <i class="fas fa-ambulance"></i> REQUEST AMBULANCE NOW
+        </button>
+        <div id="emergency-status" style="color: #94a3b8; font-size: 0.9rem;"></div>
+    </div>
+    <p style="font-size: 0.7rem; color: #ef4444; margin-top: 1rem; opacity: 0.8;">
+        ⚠️ This feature assists in locating nearby ambulances and does not guarantee response time or availability.
+    </p>
+</div>
+
+<div class="glass-card" style="margin-top: 2rem;">
+    <h2 style="color: var(--dark);"><i class="fas fa-history" style="color: var(--primary); margin-right: 0.5rem;"></i>
+        <span data-i18n="recent_activity">Recent Activity</span>
+    </h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; color: var(--text-dark);">Patient</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--text-dark);">Action</th>
+                    <th style="padding: 1rem; text-align: left; color: var(--text-dark);">Status</th>
+                </tr>
+            </thead>
+            <tbody id="activity-log"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load patients for select dropdown
+    async function loadPatients() {
+        const res = await fetch('/api/patients');
+        const patients = await res.json();
+        const select = document.getElementById('patient-select');
+        select.innerHTML = '<option value="">Select Patient</option>';
+        patients.forEach(p => {
+            select.innerHTML += `<option value="${p.id}">${p.name} (ID: ${p.id})</option>`;
+        });
+    }
+
+    loadPatients();
+
+    // Handle Patient Registration
+    document.getElementById('patient-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        formData.append('consent', document.getElementById('consent-check').checked);
+
+        const res = await fetch('/api/register_patient', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.patient_id) {
+            alert('Patient Registered Successfully!');
+            e.target.reset();
+            loadPatients();
+        }
+    };
+
+    // Handle Document Upload
+    document.getElementById('record-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing OCR...';
+
+        const formData = new FormData(e.target);
+        const res = await fetch('/api/upload_record', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        btn.disabled = false;
+        btn.innerHTML = 'Upload & Extract';
+
+        if (data.structured_data) {
+            const results = document.getElementById('ocr-results');
+            const dataDiv = document.getElementById('ocr-data');
+            results.style.display = 'block';
+            dataDiv.innerHTML = `
+                <p><strong>Symptoms:</strong> ${data.structured_data.symptoms.join(', ') || 'N/A'}</p>
+                <p><strong>Medications:</strong> ${data.structured_data.medications.join(', ') || 'N/A'}</p>
+            `;
+            alert('Document Digitized Successfully!');
+        }
+    };
+    // Emergency Logic
+    const socket = io();
+    document.getElementById('emergency-btn').onclick = () => {
+        const status = document.getElementById('emergency-status');
+        const pSelect = document.getElementById('patient-select');
+
+        if (!pSelect.value) {
+            alert("Please select a patient first.");
+            return;
+        }
+
+        status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Broadcasting emergency...';
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                socket.emit('request_ambulance', {
+                    patient_id: pSelect.value,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                });
+
+                status.innerHTML = '<i class="fas fa-check-circle" style="color: #34d399;"></i> Request sent! Drivers notified.';
+
+                // Add to activity log
+                const log = document.getElementById('activity-log');
+                const row = log.insertRow(0);
+                row.innerHTML = `<td style="padding:1rem;">Patient #${pSelect.value}</td><td style="padding:1rem;">Ambulance Request</td><td style="padding:1rem;color:#34d399;">Active</td>`;
+            });
+        }
+    };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+{% endblock %}

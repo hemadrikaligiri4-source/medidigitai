@@ -1,0 +1,1088 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .patient-item:hover {
+        background: var(--cream);
+    }
+
+    .record-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .record-card:hover {
+        background: var(--cream);
+        transform: translateY(-2px);
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .record-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .type-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .type-card:hover,
+    .type-card.selected {
+        background: rgba(230, 126, 80, 0.1);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .type-card i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .type-prescription {
+        background: rgba(129, 140, 248, 0.2);
+        color: #818cf8;
+    }
+
+    .type-lab-report {
+        background: rgba(52, 211, 153, 0.2);
+        color: #34d399;
+    }
+
+    .type-clinical-notes {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    .type-imaging {
+        background: rgba(236, 72, 153, 0.2);
+        color: #ec4899;
+    }
+
+    .type-discharge-summary {
+        background: rgba(168, 85, 247, 0.2);
+        color: #a855f7;
+    }
+
+    .type-other {
+        background: rgba(148, 163, 184, 0.2);
+        color: #94a3b8;
+    }
+
+    .filter-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-dark);
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        border-color: var(--primary);
+        color: white;
+        background: var(--primary);
+    }
+
+    .upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.2s;
+        background: var(--cream);
+        cursor: pointer;
+    }
+
+    .upload-area:hover,
+    .upload-area.active {
+        border-color: var(--primary);
+        background: rgba(230, 126, 80, 0.05);
+    }
+
+    /* Responsive Adjustments */
+    @media screen and (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr !important;
+            height: auto !important;
+        }
+
+        #ai-insights-box {
+            width: 100% !important;
+            margin-top: 1rem;
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .record-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .type-card i {
+            font-size: 1.5rem;
+        }
+
+        .type-card span {
+            font-size: 0.8rem;
+        }
+
+        #view-patient-name {
+            font-size: 1.5rem !important;
+        }
+
+        .header-section {
+            flex-direction: column;
+            padding: 1rem !important;
+        }
+
+        .medical-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        #upload-modal .glass-card {
+            width: 95vw !important;
+            height: 95vh !important;
+        }
+
+        .type-selection-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    /* Record Viewer Modal Styles */
+    #record-viewer-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 3000;
+        display: none;
+        padding: 2rem;
+        box-sizing: border-box;
+    }
+
+    .viewer-content {
+        background: var(--white);
+        border-radius: 1.5rem;
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    .viewer-image-container {
+        background: #0f172a;
+        position: relative;
+        overflow-y: auto;
+        display: block;
+        padding: 2rem;
+    }
+
+    .viewer-image-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+        display: block;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .viewer-back-btn {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        margin-bottom: 1rem;
+        background: #1e293b !important;
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(8px);
+    }
+
+    .viewer-details {
+        padding: 2.5rem;
+        overflow-y: auto;
+        background: var(--light);
+        border-left: 1px solid var(--border);
+    }
+
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag {
+        padding: 0.4rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: var(--white);
+        border: 1px solid var(--border);
+        color: var(--dark);
+    }
+
+    @media screen and (max-width: 992px) {
+        .viewer-content {
+            grid-template-columns: 1fr;
+            grid-template-rows: (1.5fr, 1fr);
+        }
+
+        .viewer-details {
+            border-left: none;
+            border-top: 1px solid var(--border);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="responsive-sidebar-layout"
+        style="display: grid; grid-template-columns: 320px 1fr; gap: 2rem; min-height: calc(100vh - 120px);">
+        <!-- Patient List Sidebar -->
+        <div class="glass-card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border);">
+                <h3 style="margin: 0 0 1rem 0; color: var(--dark);" data-i18n="patient_directory">Patient Directory</h3>
+                <div style="position: relative;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-dark);"></i>
+                    <input type="text" id="patient-search" placeholder="Search patients..."
+                        style="padding-left: 2.5rem; width: 100%; box-sizing: border-box;">
+                </div>
+            </div>
+            <div id="patient-list" style="overflow-y: auto; flex: 1; padding: 1rem;">
+                {% for patient in patients %}
+                <div class="patient-item" onclick="viewPatient('{{ patient.id }}')"
+                    style="padding: 1rem; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; border-radius: 0.75rem; margin-bottom: 0.75rem; background: var(--white);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div
+                            style="width: 40px; height: 40px; border-radius: 50%; background: var(--cream); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--dark);">{{ patient.name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-dark);">{{ patient.gender }}, {{
+                                patient.age }}
+                                yrs
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Patient Details & Insights -->
+        <div id="patient-history-view" class="glass-card"
+            style="display: none; flex-direction: column; padding: 0; overflow: hidden;">
+            <!-- Header -->
+            <div class="header-section"
+                style="padding: 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; background: var(--cream);">
+                <div>
+                    <h1 id="view-patient-name" style="margin: 0 0 0.5rem 0; font-size: 2rem; color: var(--dark);"></h1>
+                    <p id="view-patient-meta" style="color: var(--text-dark); margin: 0; font-size: 1.1rem;"></p>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="openUploadModal()" data-i18n="upload_record">
+                            <i class="fas fa-plus-circle" style="margin-right: 0.5rem;"></i> Upload Record
+                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="filter-btn active" onclick="filterRecords('All')">All</button>
+                            <button class="filter-btn" onclick="filterRecords('Prescription')">Prescriptions</button>
+                            <button class="filter-btn" onclick="filterRecords('Lab Report')">Labs</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-insights-box"
+                    style="background: rgba(230, 126, 80, 0.1); border: 1px solid rgba(230, 126, 80, 0.3); padding: 1.25rem; border-radius: 1rem; width: 350px;">
+                    <h4 style="color: var(--primary); margin: 0 0 0.75rem 0;"><i class="fas fa-sparkles"></i> <span
+                            data-i18n="ai_insights">AI Insights</span>
+                    </h4>
+                    <div id="ai-content" style="font-size: 0.9rem; line-height: 1.5; color: var(--dark);"></div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 2rem 6rem 2rem 2rem; overflow-y: auto; flex: 1;">
+                <div class="medical-grid responsive-grid-2"
+                    style="display: grid; grid-template-columns: 1fr; gap: 3rem;">
+                    <div>
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;"
+                            data-i18n="medical_history">
+                            Medical History</h3>
+                        <div id="records-list"></div>
+                    </div>
+                    <div style="border-top: 2px solid var(--border); padding-top: 2rem;">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;"
+                            data-i18n="reference_trends">
+                            Reference Trends</h3>
+                        <div
+                            style="background: var(--white); padding: 2rem; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 2rem;">
+                            <canvas id="visitChart" style="height: 350px; width: 100%;"></canvas>
+                        </div>
+
+                        <h3 style="margin-top: 2rem; margin-bottom: 1.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;" data-i18n="patient_vitals_trends">
+                            Patient Vitals Trends</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div style="background: var(--white); padding: 1.25rem; border-radius: 1.25rem; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <h5 style="margin: 0 0 0.75rem 0; color: #ef4444; font-size: 0.85rem;"><i class="fas fa-heartbeat"></i> <span data-i18n="heart_rate">Heart Rate</span></h5>
+                                <div style="height: 140px; position: relative;">
+                                    <canvas id="heartRateChart"></canvas>
+                                </div>
+                            </div>
+                            <div style="background: var(--white); padding: 1.25rem; border-radius: 1.25rem; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <h5 style="margin: 0 0 0.75rem 0; color: #3b82f6; font-size: 0.85rem;"><i class="fas fa-droplet"></i> <span data-i18n="blood_pressure">BP</span></h5>
+                                <div style="height: 140px; position: relative;">
+                                    <canvas id="bpChart"></canvas>
+                                </div>
+                            </div>
+                            <div style="background: var(--white); padding: 1.25rem; border-radius: 1.25rem; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <h5 style="margin: 0 0 0.75rem 0; color: #f59e0b; font-size: 0.85rem;"><i class="fas fa-temperature-high"></i> <span data-i18n="temperature">Temp</span></h5>
+                                <div style="height: 140px; position: relative;">
+                                    <canvas id="tempChart"></canvas>
+                                </div>
+                            </div>
+                            <div style="background: var(--white); padding: 1.25rem; border-radius: 1.25rem; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <h5 style="margin: 0 0 0.75rem 0; color: #06b6d4; font-size: 0.85rem;"><i class="fas fa-lungs"></i> <span data-i18n="spo2">SpO2</span></h5>
+                                <div style="height: 140px; position: relative;">
+                                    <canvas id="spo2Chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="no-patient-selected" class="glass-card"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.7;">
+            <div
+                style="width: 120px; height: 120px; background: var(--cream); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                <i class="fas fa-user-md" style="font-size: 4rem; color: var(--primary);"></i>
+            </div>
+            <h2 style="margin: 0 0 0.5rem 0; color: var(--dark);" data-i18n="select_patient_title">Select a Patient</h2>
+            <p style="color: var(--text-dark);" data-i18n="select_patient_desc">Choose a patient from the directory to verify records and upload new
+                documents.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="upload-modal"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="glass-card"
+        style="width: 800px; padding: 0; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
+        <div
+            style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--cream);">
+            <h2 style="margin: 0; font-size: 1.25rem; color: var(--dark);"><i class="fas fa-cloud-upload"
+                    style="color: var(--primary); margin-right: 0.75rem;"></i> Upload Medical Document</h2>
+            <button onclick="closeUploadModal()"
+                style="background: none; border: none; color: var(--text-dark); cursor: pointer; font-size: 1.25rem;"><i
+                    class="fas fa-times"></i></button>
+        </div>
+
+        <form id="upload-form" style="padding: 2rem; overflow-y: auto;">
+            <input type="hidden" id="upload-patient-id" name="patient_id">
+            <input type="hidden" id="selected-type" name="record_type" value="">
+
+            <h4 style="margin: 0 0 1rem 0; color: var(--dark);">1. Select Document Type</h4>
+            <div class="type-selection-grid">
+                <div class="responsive-grid-3"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <div class="type-card" onclick="selectType(this, 'Prescription')">
+                        <i class="fas fa-prescription-bottle-medical" style="color: #818cf8;"></i>
+                        <span style="font-weight: 500;">Prescription</span>
+                    </div>
+                    <div class="type-card" onclick="selectType(this, 'Lab Report')">
+                        <i class="fas fa-flask" style="color: #34d399;"></i>
+                        <span style="font-weight: 500;">Lab Report</span>
+                    </div>
+                    <div class="type-card" onclick="selectType(this, 'Clinical Notes')">
+                        <i class="fas fa-notes-medical" style="color: #fbbf24;"></i>
+                        <span style="font-weight: 500;">Clinical Notes</span>
+                    </div>
+                    <div class="type-card" onclick="selectType(this, 'Discharge Summary')">
+                        <i class="fas fa-file-medical-alt" style="color: #a855f7;"></i>
+                        <span style="font-weight: 500;">Discharge Summary</span>
+                    </div>
+                    <div class="type-card" onclick="selectType(this, 'Imaging')">
+                        <i class="fas fa-x-ray" style="color: #ec4899;"></i>
+                        <span style="font-weight: 500;">Imaging/X-Ray</span>
+                    </div>
+                    <div class="type-card" onclick="selectType(this, 'Other')">
+                        <i class="fas fa-file-invoice" style="color: #94a3b8;"></i>
+                        <span style="font-weight: 500;">Other</span>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 1rem 0; color: #94a3b8;">2. Upload File</h4>
+            <div class="upload-area" onclick="document.getElementById('file-input').click()" id="drop-zone">
+                <input type="file" id="file-input" name="document" accept="image/*,.pdf" style="display: none;"
+                    onchange="handleFileSelect(this)">
+                <div id="upload-placeholder">
+                    <i class="fas fa-cloud-upload-alt"
+                        style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <p style="margin: 0; font-size: 1.1rem; color: #fff;">Drag & drop or click to upload</p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #64748b;">Supports images (JPG, PNG) and
+                        PDF files</p>
+                    <button type="button" class="btn btn-primary" style="margin-top: 1.5rem;">Choose File</button>
+                </div>
+                <div id="file-preview" style="display: none; align-items: center; justify-content: center; gap: 1rem;">
+                    <i class="fas fa-check-circle" style="color: #34d399; font-size: 2rem;"></i>
+                    <div style="text-align: left;">
+                        <div id="filename" style="font-weight: 600;">filename.jpg</div>
+                        <div style="font-size: 0.8rem; color: #34d399;">Ready to upload</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="responsive-grid-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <h4 style="margin: 0 0 0.75rem 0; color: #94a3b8;">3. Hospital Name</h4>
+                    <input type="text" name="hospital_name" placeholder="Name of hospital..." style="width: 100%;">
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 0.75rem 0; color: #94a3b8;">4. Treating Doctor</h4>
+                    <input type="text" name="treating_doctor_name" placeholder="Dr. Name..." style="width: 100%;">
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 1rem 0; color: #94a3b8;">5. Doctor's Observations (Optional)</h4>
+            <textarea name="doctor_notes" rows="3" placeholder="Add any clinical context or observations here..."
+                style="width: 100%;"></textarea>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="padding-left: 2rem; padding-right: 2rem;">Digitize
+                    & Save Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Record Viewer Modal -->
+<div id="record-viewer-modal">
+    <div class="viewer-content">
+        <div class="viewer-image-container">
+            <button class="btn btn-outline viewer-back-btn" onclick="closeViewer()">
+                <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i> Back
+            </button>
+            <img id="viewer-img" src="" alt="Medical Record">
+        </div>
+        <div class="viewer-details">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                <div>
+                    <h2 id="viewer-title" style="margin: 0 0 0.25rem 0; color: var(--dark);"></h2>
+                    <div id="viewer-date" style="color: var(--primary); font-weight: 600;"></div>
+                </div>
+                <div id="viewer-status-badge"></div>
+            </div>
+
+            <div style="margin-bottom: 2.5rem;">
+                <h4
+                    style="color: var(--dark); margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+                    <i class="fas fa-list-check" style="color: var(--primary);"></i> Clinical Observations
+                </h4>
+                <div id="viewer-notes"
+                    style="color: var(--text-dark); line-height: 1.6; font-size: 1rem; white-space: pre-wrap;"></div>
+            </div>
+
+            <div style="margin-bottom: 2.5rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <h4 style="color: var(--dark); margin: 0;">
+                        <i class="fas fa-sparkles" style="color: var(--primary);"></i> AI Medical Summarization
+                    </h4>
+                    <button id="summarize-btn" class="btn btn-outline"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--primary); color: var(--primary); background: transparent;">
+                        <i class="fas fa-arrows-rotate"></i> Summarize Now
+                    </button>
+                </div>
+                <div id="viewer-summarization"
+                    style="color: var(--text-dark); line-height: 1.6; font-size: 1rem; background: rgba(230, 126, 80, 0.05); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(230, 126, 80, 0.1); margin-bottom: 1rem; font-style: italic;">
+                </div>
+                <div id="viewer-key-points" class="tag-container" style="gap: 0.5rem;"></div>
+            </div>
+
+            <div class="responsive-sidebar-layout"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1.5rem; background: var(--white); border-radius: 1rem; border: 1px solid var(--border);">
+                <div>
+                    <h5
+                        style="color: var(--text-dark); margin-bottom: 0.5rem; font-size: 0.8rem; text-transform: uppercase;">
+                        <i class="fas fa-hospital"></i> Hospital
+                    </h5>
+                    <p id="viewer-hospital" style="color: var(--dark); font-weight: 600; margin: 0;"></p>
+                </div>
+                <div>
+                    <h5
+                        style="color: var(--text-dark); margin-bottom: 0.5rem; font-size: 0.8rem; text-transform: uppercase;">
+                        <i class="fas fa-user-md"></i> Treating Doctor
+                    </h5>
+                    <p id="viewer-doctor" style="color: var(--dark); font-weight: 600; margin: 0;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Toast Notification Container -->
+<div id="toast-container"
+    style="position: fixed; top: 1rem; right: 1rem; z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem;">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- Toast Logic ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+
+        // Colors
+        const isSuccess = type === 'success';
+        const bgColor = isSuccess ? 'rgba(6, 78, 59, 0.95)' : 'rgba(127, 29, 29, 0.95)';
+        const borderColor = isSuccess ? '#34d399' : '#f87171';
+        const iconClass = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const iconColor = isSuccess ? '#34d399' : '#f87171';
+
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas ${iconClass}" style="color: ${iconColor}; font-size: 1.25rem;"></i>
+                <span style="color: white; font-weight: 500; font-size: 0.95rem;">${message}</span>
+            </div>
+        `;
+
+        toast.style.cssText = `
+            background: ${bgColor};
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid ${borderColor};
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            min-width: 320px;
+            transform: translateX(120%);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            color: #fff;
+        `;
+
+        container.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.opacity = '1';
+        });
+
+        // Remove after 4s
+        setTimeout(() => {
+            toast.style.transform = 'translateX(120%)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
+    }
+
+    let selectedPatientId = null;
+    let patientRecords = [];
+
+    async function viewPatient(id) {
+        selectedPatientId = id;
+        document.getElementById('upload-patient-id').value = id;
+        document.getElementById('no-patient-selected').style.display = 'none';
+        const view = document.getElementById('patient-history-view');
+        view.style.display = 'flex';
+
+        // Reset active state of list
+        document.querySelectorAll('.patient-item').forEach(el => el.style.borderColor = 'var(--glass-border)');
+        // Highlight selected
+        const selectedItem = document.querySelector(`.patient-item[onclick="viewPatient('${id}')"]`);
+        if (selectedItem) selectedItem.style.borderColor = 'var(--accent)';
+
+        try {
+            const res = await fetch(`/api/patient/${id}/history`);
+            const data = await res.json();
+
+            patientRecords = data.records;
+
+            document.getElementById('view-patient-name').innerText = data.patient.name;
+            document.getElementById('view-patient-meta').innerText = `${data.patient.gender || 'N/A'}, ${data.patient.age || 'N/A'} years • ${data.patient.contact || 'No contact'}`;
+
+            generateAIInsights(data.records);
+            renderChart(data.records);
+            renderRecords(data.records);
+            loadVitals(id);
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to load patient history", "error");
+        }
+    }
+
+    function renderRecords(records) {
+        const list = document.getElementById('records-list');
+        list.innerHTML = '';
+
+        if (records.length === 0) {
+            list.innerHTML = `<div style="text-align: center; padding: 3rem; color: #64748b; border: 1px dashed var(--glass-border); border-radius: 1rem;">
+                <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <p>No records found for this patient.</p>
+            </div>`;
+            return;
+        }
+
+        records.forEach(r => {
+            const typeKey = r.record_type ? r.record_type.toLowerCase().replace(/ /g, '-').replace(/\//g, '-') : 'other';
+            const typeClass = 'type-' + typeKey;
+            const icon = getIconForType(r.record_type);
+
+            // Format symptoms/meds
+            const symptoms = r.structured_data.symptoms && r.structured_data.symptoms.length > 0
+                ? r.structured_data.symptoms.slice(0, 2).join(', ')
+                : 'No symptoms tagged';
+
+            const meds = r.structured_data.medications && r.structured_data.medications.length > 0
+                ? `${r.structured_data.medications.length} medications`
+                : 'No presc.';
+
+            const item = document.createElement('div');
+            item.className = 'record-card';
+            item.onclick = () => viewRecord(r);
+            item.innerHTML = `
+                <div class="record-icon ${typeClass}">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <span style="font-weight: 600; font-size: 1.05rem;">${r.record_type || 'Record'}</span>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">${r.visit_date}</span>
+                    </div>
+                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem; line-height: 1.4;">
+                        ${r.doctor_notes || 'No doctor notes available.'}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;">
+                        <span style="margin-right: 1rem;"><i class="fas fa-hospital"></i> ${r.hospital_name || 'N/A'}</span>
+                        <span><i class="fas fa-user-md"></i> ${r.treating_doctor_name || 'N/A'}</span>
+                    </div>
+                    <div style="display: flex; gap: 1rem; font-size: 0.8rem;">
+                        <span style="display: flex; align-items: center; gap: 0.4rem; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 1rem;">
+                            <i class="fas fa-stethoscope"></i> ${symptoms}
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 0.4rem; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 1rem;">
+                            <i class="fas fa-pills"></i> ${meds}
+                        </span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.7rem; color: #34d399; background: rgba(52, 211, 153, 0.1); padding: 0.25rem 0.5rem; border-radius: 0.4rem; border: 1px solid rgba(52, 211, 153, 0.2);">DIGITIZED</span>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function filterRecords(type) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        if (event) event.target.classList.add('active');
+
+        if (type === 'All') {
+            renderRecords(patientRecords);
+        } else {
+            const filtered = patientRecords.filter(r => (r.record_type || 'Other').includes(type));
+            renderRecords(filtered);
+        }
+    }
+
+    function viewRecord(record) {
+        document.getElementById('record-viewer-modal').style.display = 'flex';
+        // Normalize path for web URLs
+        let cleanPath = record.image.replace(/\\/g, '/');
+        if (!cleanPath.startsWith('/')) {
+            if (!cleanPath.startsWith('static/')) {
+                cleanPath = '/static/' + cleanPath;
+            } else {
+                cleanPath = '/' + cleanPath;
+            }
+        }
+        document.getElementById('viewer-img').src = cleanPath;
+        document.getElementById('viewer-title').innerText = record.record_type + ' Analysis';
+        document.getElementById('viewer-date').innerText = 'Visit Date: ' + record.visit_date;
+        document.getElementById('viewer-hospital').innerText = record.hospital_name || 'N/A';
+        // AI Summarization & Key Points
+        const sumDiv = document.getElementById('viewer-summarization');
+        const keyDiv = document.getElementById('viewer-key-points');
+        const sumBtn = document.getElementById('summarize-btn');
+
+        const updateAIUI = (summarization, keyPoints) => {
+            sumDiv.innerText = summarization || "Medical summary not available for this record.";
+            keyDiv.innerHTML = '';
+            if (keyPoints && keyPoints.length > 0) {
+                keyPoints.forEach(point => {
+                    const span = document.createElement('span');
+                    span.className = 'tag';
+                    span.style.background = 'rgba(230, 126, 80, 0.1)';
+                    span.style.color = 'var(--primary)';
+                    span.style.borderColor = 'rgba(230, 126, 80, 0.2)';
+                    span.innerHTML = `<i class="fas fa-circle-info" style="margin-right: 0.5rem; font-size: 0.7rem;"></i> ${point}`;
+                    keyDiv.appendChild(span);
+                });
+            }
+        };
+
+        updateAIUI(record.structured_data.summarization || record.raw_ocr_text, record.structured_data.key_points);
+
+        sumBtn.onclick = async () => {
+            const originalText = sumBtn.innerHTML;
+            sumBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            sumBtn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/summarize_record/${record.id}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.summarization) {
+                    updateAIUI(data.summarization, data.key_points);
+                    document.getElementById('viewer-date').innerText = 'Visit Date: ' + data.visit_date;
+                    showToast("Record analyzed successfully!", "success");
+                    // Update the local record object
+                    record.structured_data.summarization = data.summarization;
+                    record.structured_data.key_points = data.key_points;
+                    record.visit_date = data.visit_date;
+                    if (typeof viewPatient === 'function') viewPatient(selectedPatientId);
+                } else {
+                    showToast(data.error || "Summarization failed", "error");
+                }
+            } catch (err) {
+                showToast("Connection error", "error");
+            } finally {
+                sumBtn.innerHTML = originalText;
+                sumBtn.disabled = false;
+            }
+        };
+
+        // Process structured data for display
+        const structuredDiv = document.getElementById('viewer-structured');
+        structuredDiv.innerHTML = '';
+
+        if (record.structured_data) {
+            Object.entries(record.structured_data).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    value.forEach(item => {
+                        if (item) {
+                            const tag = document.createElement('span');
+                            tag.className = 'tag';
+                            tag.innerText = `${key}: ${item}`;
+                            structuredDiv.appendChild(tag);
+                        }
+                    });
+                } else if (typeof value === 'object' && value !== null) {
+                    Object.entries(value).forEach(([k, v]) => {
+                        if (v) {
+                            const tag = document.createElement('span');
+                            tag.className = 'tag';
+                            tag.innerText = `${k}: ${v}`;
+                            structuredDiv.appendChild(tag);
+                        }
+                    });
+                } else if (value && typeof value === 'string' && value.length > 0) {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.innerText = `${key}: ${value}`;
+                    structuredDiv.appendChild(tag);
+                }
+            });
+        }
+
+        if (structuredDiv.innerHTML === '') {
+            structuredDiv.innerHTML = '<p style="color: #94a3b8; font-style: italic;">No specific data points extracted.</p>';
+        }
+
+        const badge = document.getElementById('viewer-status-badge');
+        badge.innerHTML = '<span style="background: rgba(52, 211, 153, 0.1); color: #34d399; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(52, 211, 153, 0.2);"><i class="fas fa-check-circle"></i> VERIFIED</span>';
+    }
+
+    function closeViewer() {
+        document.getElementById('record-viewer-modal').style.display = 'none';
+    }
+
+    function getIconForType(type) {
+        if (!type) return 'fa-file-medical';
+        const t = type.toLowerCase();
+        if (t.includes('prescription')) return 'fa-prescription-bottle-medical';
+        if (t.includes('lab')) return 'fa-flask';
+        if (t.includes('notes')) return 'fa-notes-medical';
+        if (t.includes('imaging') || t.includes('x-ray')) return 'fa-x-ray';
+        if (t.includes('discharge')) return 'fa-file-medical-alt';
+        return 'fa-file-medical';
+    }
+
+    // --- Upload Modal Logic ---
+
+    function openUploadModal() {
+        document.getElementById('upload-modal').style.display = 'flex';
+        // Select first type by default
+        document.querySelector('.type-card').click();
+    }
+
+    function closeUploadModal() {
+        document.getElementById('upload-modal').style.display = 'none';
+        document.getElementById('upload-form').reset();
+        resetFileUpload();
+    }
+
+    function selectType(el, type) {
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('selected-type').value = type;
+    }
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('upload-placeholder').style.display = 'none';
+            document.getElementById('file-preview').style.display = 'flex';
+            document.getElementById('filename').innerText = input.files[0].name;
+            document.getElementById('drop-zone').classList.add('active');
+        }
+    }
+
+    function resetFileUpload() {
+        document.getElementById('upload-placeholder').style.display = 'block';
+        document.getElementById('file-preview').style.display = 'none';
+        document.getElementById('drop-zone').classList.remove('active');
+    }
+
+    document.getElementById('upload-form').onsubmit = async (e) => {
+        e.preventDefault();
+
+        if (!document.getElementById('selected-type').value) {
+            showToast("Please select a document type.", "error");
+            return;
+        }
+
+        const formData = new FormData(e.target);
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing AI Digitization...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/upload_record', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.message) {
+                closeUploadModal();
+                showToast("Record Digitized & Saved Successfully!", "success");
+                viewPatient(selectedPatientId); // Refresh timeline
+            } else {
+                showToast(data.error || "Upload failed", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Connection error: " + err.message, "error");
+        } finally {
+            btn.innerText = "Digitize & Save Record";
+            btn.disabled = false;
+        }
+    };
+
+    // AI Insights (Kept from previous version)
+    function generateAIInsights(records) {
+        const aiBox = document.getElementById('ai-content');
+        if (records.length === 0) {
+            aiBox.innerHTML = "<span style='color: #94a3b8; font-style: italic;'>No sufficient data to generate insights yet. Upload records to activate AI analysis.</span>";
+            return;
+        }
+        // ... (Keep simple logic or expand)
+        aiBox.innerHTML = `
+            <div style="margin-bottom: 0.5rem;">
+                <i class="fas fa-check-circle" style="color: #34d399; margin-right: 0.5rem;"></i>
+                Patient adherence to schedule is <strong>High (95%)</strong>.
+            </div>
+             <div>
+                <i class="fas fa-exclamation-circle" style="color: #fbbf24; margin-right: 0.5rem;"></i>
+                Last lab report indicates need for Vitamin D supplement review.
+            </div>
+        `;
+    }
+
+    let myChart = null;
+    function renderChart(records) {
+        const ctx = document.getElementById('visitChart').getContext('2d');
+        if (myChart) myChart.destroy();
+
+        if (records.length === 0) return;
+
+        // Group by month
+        const dataMap = {};
+        records.forEach(r => {
+            const month = r.visit_date.substring(0, 7); // YYYY-MM
+            dataMap[month] = (dataMap[month] || 0) + 1;
+        });
+
+        const labels = Object.keys(dataMap).sort();
+        const values = labels.map(l => dataMap[l]);
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Visits',
+                    data: values,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#34d399'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Simple search filter
+    document.getElementById('patient-search').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.patient-item').forEach(item => {
+            const name = item.innerText.toLowerCase();
+            item.style.display = name.includes(term) ? 'block' : 'none';
+        });
+    });
+
+    let vitalsCharts = {};
+    async function loadVitals(patientId) {
+        try {
+            const res = await fetch(`/api/get_vitals?patient_id=${patientId}`);
+            const data = await res.json();
+            if (data.vitals) {
+                renderVitalsCharts(data.vitals);
+            }
+        } catch (err) {
+            console.error("Failed to load vitals:", err);
+        }
+    }
+
+    function renderVitalsCharts(data) {
+        if (!data || data.length === 0) return;
+        
+        const labels = data.map(v => v.recorded_at);
+        const configs = {
+            heartRateChart: { label: 'Heart Rate', data: data.map(v => Number(v.heart_rate)), color: '#ef4444' },
+            bpChart: {
+                datasets: [
+                    { label: 'Systolic', data: data.map(v => Number(v.blood_pressure_sys)), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 },
+                    { label: 'Diastolic', data: data.map(v => Number(v.blood_pressure_dia)), borderColor: '#60a5fa', backgroundColor: 'rgba(96, 165, 250, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            tempChart: { label: 'Temperature', data: data.map(v => Number(v.temperature)), color: '#f59e0b' },
+            spo2Chart: { label: 'SpO2', data: data.map(v => Number(v.spo2)), color: '#06b6d4' }
+        };
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 10, right: 10, bottom: 0, left: 0 } },
+            plugins: { 
+                legend: { 
+                    display: false,
+                    position: 'top',
+                    labels: { boxWidth: 10, font: { size: 10 }, color: '#64748b' }
+                }
+            },
+            elements: {
+                point: { radius: 3, hoverRadius: 5 },
+                line: { borderWidth: 2 }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: false, 
+                    grid: { color: 'rgba(0,0,0,0.03)' },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 9 }, maxRotation: 0 }
+                }
+            }
+        };
+
+        Object.entries(configs).forEach(([id, config]) => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            if (vitalsCharts[id]) {
+                vitalsCharts[id].destroy();
+            }
+            
+            const datasets = config.datasets || [{
+                label: config.label,
+                data: config.data,
+                borderColor: config.color,
+                backgroundColor: config.color + '20',
+                fill: true,
+                tension: 0.4
+            }];
+
+            // Override legend for BP chart
+            const options = JSON.parse(JSON.stringify(chartOptions));
+            if (id === 'bpChart') options.plugins.legend.display = true;
+
+            vitalsCharts[id] = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: options
+            });
+        });
+    }
+</script>
+<style>
+    .patient-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}

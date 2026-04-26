@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    #map {
+        height: 400px;
+        border-radius: 1rem;
+        border: 1px solid var(--glass-border);
+        margin-bottom: 2rem;
+    }
+
+    .request-card {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border-left: 4px solid #818cf8;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="responsive-sidebar-layout" style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+    <div>
+        <div class="glass-card">
+            <h2 style="margin-bottom: 2rem;"><i class="fas fa-map-marked-alt"></i> <span
+                    data-i18n="live_tracking_map">Live Tracking Map</span></h2>
+            <div id="map"></div>
+            <div style="display: flex; gap: 1rem;">
+                <button id="start-duty" class="btn btn-primary" data-i18n="go_online">Go Online</button>
+                <button id="stop-duty" class="btn btn-outline" style="display: none;" data-i18n="go_offline">Go
+                    Offline</button>
+            </div>
+            <p id="status-text" style="margin-top: 1rem; color: #94a3b8;"><i class="fas fa-circle"
+                    style="color: #64748b;"></i> <span data-i18n="currently_offline">Currently Offline</span></p>
+        </div>
+    </div>
+
+    <div>
+        <div class="glass-card">
+            <h2 style="margin-bottom: 1.5rem;"><i class="fas fa-bell"></i> <span
+                    data-i18n="emergency_requests">Emergency Requests</span></h2>
+            <div id="emergency-list">
+                {% if requests %}
+                {% for req in requests %}
+                <div id="request-{{ req.id }}" class="request-card" {% if req.status=='Accepted'
+                    %}style="border-left-color: #34d399;" {% endif %}>
+                    <h4>{% if req.status == 'Accepted' %}<i class="fas fa-check"></i> {% endif %}Request #{{ req.id }}
+                    </h4>
+                    <p>Patient ID: {{ req.patient_id }}</p>
+                    <p>Location: {{ req.pickup_lat|round(4) }}, {{ req.pickup_lng|round(4) }}</p>
+                    {% if req.status == 'Pending' %}
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;"
+                            onclick="acceptRequest({{ req.id }}, {{ req.pickup_lat }}, {{ req.pickup_lng }})"
+                            data-i18n="accept">Accept</button>
+                        <button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.8rem;"
+                            onclick="rejectRequest({{ req.id }})" data-i18n="reject">Reject</button>
+                    </div>
+                    {% else %}
+                    <p style="color: #34d399; margin-top: 0.5rem; font-weight: 600;"><i class="fas fa-check"></i>
+                        Accepted. Navigating...</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p style="color: #94a3b8; font-style: italic; text-align: center;" data-i18n="no_active_requests">No
+                    active requests.</p>
+                {% endif %}
+            </div>
+            <!-- Debug info removed to prevent serialization errors -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    const socket = io();
+    const driverId = parseInt("{{ current_user.id }}");
+    let map, marker;
+    let watchId = null;
+
+    // Initialize Map
+    map = L.map('map').setView([17.3850, 78.4867], 13); // Default to Hyderabad
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const initialStatus = "{{ ambulance.status if ambulance else 'Offline' }}";
+
+    function startDuty() {
+        if ("geolocation" in navigator) {
+            document.getElementById('start-duty').style.display = 'none';
+            document.getElementById('stop-duty').style.display = 'inline-block';
+            document.getElementById('status-text').innerHTML = '<i class="fas fa-circle" style="color: #34d399;"></i> You are Online';
+
+            // Persist status
+            socket.emit('toggle_status', { driver_id: driverId, status: 'Available' });
+
+            watchId = navigator.geolocation.watchPosition((pos) => {
+                const { latitude, longitude } = pos.coords;
+                if (!marker) {
+                    marker = L.marker([latitude, longitude]).addTo(map).bindPopup('Your Location').openPopup();
+                } else {
+                    marker.setLatLng([latitude, longitude]);
+                }
+                map.setView([latitude, longitude]);
+
+                // Send to backend
+                socket.emit('update_location', {
+                    driver_id: driverId,
+                    lat: latitude,
+                    lng: longitude
+                });
+            });
+        }
+    }
+
+    function stopDuty() {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        document.getElementById('start-duty').style.display = 'inline-block';
+        document.getElementById('stop-duty').style.display = 'none';
+        document.getElementById('status-text').innerHTML = '<i class="fas fa-circle" style="color: #64748b;"></i> Currently Offline';
+
+        // Persist status
+        socket.emit('toggle_status', { driver_id: driverId, status: 'Offline' });
+    }
+
+    document.getElementById('start-duty').onclick = startDuty;
+    document.getElementById('stop-duty').onclick = stopDuty;
+
+    // Auto-restart if already available
+    if (initialStatus === 'Available') {
+        startDuty();
+    }
+
+    socket.on('new_emergency_request', (data) => {
+        console.log("🚨 NEW EMERGENCY REQUEST EVENT RECEIVED:", data);
+
+        const list = document.getElementById('emergency-list');
+        if (list.querySelector('p')) list.innerHTML = '';
+
+        const div = document.createElement('div');
+        div.id = `request-${data.request_id}`;
+        div.className = 'request-card';
+        div.innerHTML = `
+            <h4>New Request #${data.request_id}</h4>
+            <p>Patient ID: ${data.patient_id}</p>
+            <p>Location: ${data.lat.toFixed(4)}, ${data.lng.toFixed(4)}</p>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="acceptRequest(${data.request_id}, ${data.lat}, ${data.lng})">Accept</button>
+                <button class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="rejectRequest(${data.request_id})">Reject</button>
+            </div>
+        `;
+        list.prepend(div);
+
+        console.log("✓ Request card added to DOM");
+
+        // Notification sound
+        new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play();
+    });
+
+    let currentRequestId = null;
+
+    socket.on('emergency_accepted', (data) => {
+        const reqDiv = document.getElementById(`request-${data.request_id}`);
+        if (reqDiv) {
+            if (data.driver_id === driverId) {
+                // It was me (possibly in another tab)
+                if (!reqDiv.querySelector('.fa-check')) {
+                    reqDiv.style.borderLeftColor = "#34d399";
+                    const h4 = reqDiv.querySelector('h4');
+                    if (h4 && !h4.innerHTML.includes('fa-check')) {
+                        h4.innerHTML = `<i class="fas fa-check"></i> ` + h4.innerHTML;
+                    }
+
+                    const actionDiv = reqDiv.querySelector('div[style*="display: flex"]');
+                    if (actionDiv) actionDiv.remove();
+
+                    if (!reqDiv.innerHTML.includes('Accepted. Navigating...')) {
+                        reqDiv.innerHTML += `<p style="color: #34d399; margin-top: 0.5rem; font-weight: 600;"><i class="fas fa-check"></i> Accepted. Navigating...</p>`;
+                    }
+                }
+
+                // Add marker to map if not already there
+                addPatientMarker(data.lat, data.lng, `Patient Request #${data.request_id}`);
+
+            } else {
+                // Someone else accepted it, remove it from my board
+                reqDiv.remove();
+                if (document.getElementById('emergency-list').children.length === 0) {
+                    document.getElementById('emergency-list').innerHTML = '<p style="color: #94a3b8; font-style: italic; text-align: center;">No active requests.</p>';
+                }
+            }
+        }
+    });
+
+    function addPatientMarker(lat, lng, label) {
+        L.marker([lat, lng], {
+            icon: L.icon({
+                iconUrl: 'https://cdn-icons-png-flaticon.com/512/2838/2838912.png',
+                iconSize: [32, 32]
+            })
+        }).addTo(map).bindPopup(label).openPopup();
+    }
+
+    function acceptRequest(reqId, lat, lng) {
+        currentRequestId = reqId;
+        // Find the button and show loading state
+        const requestDiv = document.getElementById(`request-${reqId}`);
+        const acceptBtn = requestDiv ? requestDiv.querySelector('.btn-primary') : null;
+        if (acceptBtn) {
+            acceptBtn.disabled = true;
+            acceptBtn.innerText = "Accepting...";
+        }
+
+        socket.emit('accept_emergency', {
+            request_id: reqId,
+            driver_id: driverId
+        });
+    }
+
+    // Mark existing accepted requests on map load
+    window.addEventListener('load', () => {
+        {% if requests %}
+        {% for req in requests %}
+        {% if req.status == 'Accepted' %}
+        addPatientMarker({{ req.pickup_lat |default(0) }}, {{ req.pickup_lng |default(0) }}, 'Patient Request #{{ req.id }}');
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    });
+
+    function rejectRequest(reqId) {
+        document.getElementById(`request-${reqId}`).remove();
+        if (document.getElementById('emergency-list').children.length === 0) {
+            document.getElementById('emergency-list').innerHTML = '<p style="color: #94a3b8; font-style: italic; text-align: center;">No active requests.</p>';
+        }
+    }
+</script>
+{% endblock %}

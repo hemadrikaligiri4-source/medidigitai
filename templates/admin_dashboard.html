@@ -1,0 +1,639 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+        min-height: calc(100vh - 100px);
+    }
+
+    .admin-sidebar {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 1.2rem;
+        border-radius: 1rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+
+    .nav-item:hover, .nav-item.active {
+        background: rgba(230, 126, 80, 0.1);
+        color: var(--primary);
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .filter-section {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        align-items: flex-end;
+    }
+
+    .chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+
+    .hotspot-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .hotspot-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hotspot-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--light);
+        border-radius: 1rem;
+        border-left: 4px solid var(--primary);
+    }
+
+    @media (max-width: 1024px) {
+        .admin-container {
+            grid-template-columns: 1fr;
+        }
+        .admin-sidebar {
+            position: static;
+        }
+        .chart-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <aside class="admin-sidebar">
+        <div class="sidebar-nav">
+            <a href="javascript:void(0)" class="nav-item active" onclick="showSection('trends')">
+                <i class="fas fa-chart-line"></i>
+                Disease Trends
+            </a>
+            <a href="javascript:void(0)" class="nav-item" onclick="showSection('users')">
+                <i class="fas fa-users-cog"></i>
+                User Management
+            </a>
+            <a href="javascript:void(0)" class="nav-item" onclick="showSection('hospitals')">
+                <i class="fas fa-hospital"></i>
+                Hospitals
+            </a>
+            <a href="javascript:void(0)" class="nav-item" onclick="showSection('reports')">
+                <i class="fas fa-file-export"></i>
+                Reports
+            </a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <!-- Disease Trends Section -->
+        <div id="trends-section">
+            <div class="dashboard-header">
+                <div>
+                    <h1 style="font-family: 'Playfair Display', serif; font-size: 2rem;">Disease Trend Dashboard</h1>
+                    <p style="color: #64748b;">Analyze public health patterns and disease spread.</p>
+                </div>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-download mr-2"></i> Export Report
+                </button>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Disease Type</label>
+                    <select id="disease-filter" onchange="loadTrends()">
+                        <option value="All">All Diseases</option>
+                        <option value="Flu">Flu</option>
+                        <option value="Dengue">Dengue</option>
+                        <option value="Malaria">Malaria</option>
+                        <option value="Covid-19">Covid-19</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Region / City</label>
+                    <select id="region-filter" onchange="loadTrends()">
+                        <option value="All">All Regions</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Mumbai">Mumbai</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Time Period</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary period-btn" style="flex: 1; padding: 0.5rem;" onclick="setPeriod('daily')">Daily</button>
+                        <button class="btn btn-outline period-btn" style="flex: 1; padding: 0.5rem;" onclick="setPeriod('monthly')">Monthly</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title"><i class="fas fa-wave-square" style="color: #3b82f6;"></i> Disease Spreading Trend</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title"><i class="fas fa-map-marked-alt" style="color: #ef4444;"></i> Distribution by Region</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="regionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-grid" style="grid-template-columns: 2fr 1fr;">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title"><i class="fas fa-biohazard" style="color: #f59e0b;"></i> Hotspots & High Risk Areas</h3>
+                    </div>
+                    <div class="hotspot-list" id="hotspot-list">
+                        <!-- Hotspots will be loaded here -->
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title"><i class="fas fa-chart-pie" style="color: #8b5cf6;"></i> Disease Share</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="shareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div id="users-section" style="display: none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1 style="font-family: 'Playfair Display', serif; font-size: 2rem;">User Management</h1>
+                    <p style="color: #64748b;">Manage all doctors, patients, and staff under control.</p>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fas fa-user-plus mr-2"></i> Add New User
+                </button>
+            </div>
+
+            <div class="glass-card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                            <th style="padding: 1rem;">User ID</th>
+                            <th style="padding: 1rem;">Username</th>
+                            <th style="padding: 1rem;">Email</th>
+                            <th style="padding: 1rem;">Role</th>
+                            <th style="padding: 1rem;">Status</th>
+                            <th style="padding: 1rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Hospital Management Section -->
+        <div id="hospitals-section" style="display: none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1 style="font-family: 'Playfair Display', serif; font-size: 2rem;">Hospital Management</h1>
+                    <p style="color: #64748b;">Monitoring medical facility activity and record distribution.</p>
+                </div>
+                <button class="btn btn-primary" onclick="loadHospitals()">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh Data
+                </button>
+            </div>
+            
+            <div class="glass-card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                            <th style="padding: 1rem;">Hospital Name</th>
+                            <th style="padding: 1rem;">Total Records</th>
+                            <th style="padding: 1rem;">Activity Status</th>
+                            <th style="padding: 1rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hospital-table-body">
+                        <!-- Hospitals will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="reports-section" style="display: none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1 style="font-family: 'Playfair Display', serif; font-size: 2rem;">Reports & Analytics</h1>
+                    <p style="color: #64748b;">Comprehensive overview of system performance and data metrics.</p>
+                </div>
+                <button class="btn btn-primary" onclick="loadStats()">
+                    <i class="fas fa-file-download mr-2"></i> Generate Full Report
+                </button>
+            </div>
+
+            <div class="chart-grid" id="stats-grid">
+                <!-- Stats cards will be loaded here -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let trendChart, regionChart, shareChart;
+    let currentPeriod = 'daily';
+
+    async function loadTrends() {
+        const disease = document.getElementById('disease-filter').value;
+        const region = document.getElementById('region-filter').value;
+        
+        try {
+            const res = await fetch(`/api/disease_trends?disease=${disease}&region=${region}`);
+            const data = await res.json();
+            if (data.trends) {
+                const processed = processData(data.trends, currentPeriod);
+                renderCharts(processed);
+                updateHotspots(data.trends);
+            }
+        } catch (err) {
+            console.error("Failed to load trends:", err);
+        }
+    }
+
+    function processData(trends, period) {
+        // Aggregate data by period
+        const aggregated = {};
+        trends.forEach(t => {
+            let key = t.date;
+            if (period === 'monthly') {
+                key = t.date.substring(0, 7); // YYYY-MM
+            }
+            aggregated[key] = (aggregated[key] || 0) + t.cases;
+        });
+        
+        const labels = Object.keys(aggregated).sort();
+        const values = labels.map(l => aggregated[l]);
+        
+        // Also keep raw trends for other charts
+        return { 
+            timeline: { labels, values },
+            raw: trends 
+        };
+    }
+
+    function renderCharts(data) {
+        const trends = data.raw;
+        
+        // Region Data
+        const regionData = {};
+        trends.forEach(t => {
+            regionData[t.region] = (regionData[t.region] || 0) + t.cases;
+        });
+
+        // Disease Share Data
+        const diseaseData = {};
+        trends.forEach(t => {
+            diseaseData[t.disease] = (diseaseData[t.disease] || 0) + t.cases;
+        });
+
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+        trendChart = new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: data.timeline.labels,
+                datasets: [{
+                    label: 'Active Cases',
+                    data: data.timeline.values,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxRegion = document.getElementById('regionChart').getContext('2d');
+        if (regionChart) regionChart.destroy();
+        regionChart = new Chart(ctxRegion, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(regionData),
+                datasets: [{
+                    label: 'Cases by Region',
+                    data: Object.values(regionData),
+                    backgroundColor: '#ef4444'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const ctxShare = document.getElementById('shareChart').getContext('2d');
+        if (shareChart) shareChart.destroy();
+        shareChart = new Chart(ctxShare, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(diseaseData),
+                datasets: [{
+                    data: Object.values(diseaseData),
+                    backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function updateHotspots(trends) {
+        const regionTotals = {};
+        trends.forEach(t => {
+            regionTotals[t.region] = (regionTotals[t.region] || 0) + t.cases;
+        });
+
+        const sortedRegions = Object.entries(regionTotals)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3);
+
+        const list = document.getElementById('hotspot-list');
+        list.innerHTML = sortedRegions.map(([region, cases]) => `
+            <div class="hotspot-item">
+                <div>
+                    <span style="font-weight: 700;">${region}</span>
+                    <p style="font-size: 0.8rem; color: #64748b;">High infection rate detected</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="color: #ef4444; font-weight: 800;">${cases} Cases</span>
+                    <p style="font-size: 0.7rem; color: #ef4444;">🚨 Action Required</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function setPeriod(p) {
+        currentPeriod = p;
+        // Update button styles
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline');
+        });
+        event.target.classList.remove('btn-outline');
+        event.target.classList.add('btn-primary');
+        loadTrends();
+    }
+
+    function showSection(id) {
+        // Hide all sections
+        ['trends', 'users', 'hospitals', 'reports'].forEach(s => {
+            document.getElementById(s + '-section').style.display = 'none';
+        });
+        // Show selected section
+        document.getElementById(id + '-section').style.display = 'block';
+        
+        // Update nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.innerText.toLowerCase().includes(id.substring(0, 3))) {
+                item.classList.add('active');
+            }
+        });
+
+        if (id === 'users') {
+            loadUsers();
+        } else if (id === 'hospitals') {
+            loadHospitals();
+        } else if (id === 'reports') {
+            loadStats();
+        }
+    }
+
+    async function loadUsers() {
+        console.log("Loading users...");
+        try {
+            const res = await fetch('/api/admin/users');
+            const data = await res.json();
+            console.log("Users data:", data);
+            if (data.users) {
+                const tbody = document.getElementById('user-table-body');
+                tbody.innerHTML = data.users.map(u => {
+                    const statusIcon = u.verified ? 'fa-check-circle' : 'fa-clock';
+                    const statusText = u.verified ? 'Verified' : 'Pending';
+                    const statusColor = u.verified ? '#22c55e' : '#64748b';
+                    
+                    return `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem;">#${u.id}</td>
+                        <td style="padding: 1rem; font-weight: 600;">${u.username}</td>
+                        <td style="padding: 1rem;">${u.email || 'N/A'}</td>
+                        <td style="padding: 1rem;"><span class="btn" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; background: var(--light); color: var(--primary); border: 1px solid var(--primary);">${u.role}</span></td>
+                        <td style="padding: 1rem;">
+                            <span style="color: ${statusColor}; font-weight: 600;">
+                                <i class="fas ${statusIcon} mr-1"></i>
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline edit-user-btn" data-id="${u.id}" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;" onclick="editUser(${u.id}, '${u.role}')" title="Edit Role">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline delete-user-btn" data-id="${u.id}" style="padding: 0.3rem 0.7rem; font-size: 0.8rem; color: #ef4444; border-color: #ef4444;" onclick="deleteUser(${u.id})" title="Delete User">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+        } catch (err) {
+            console.error("Failed to load users:", err);
+        }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+        try {
+            const res = await fetch(`/api/admin/delete_user/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                loadUsers();
+            } else {
+                alert(data.error);
+            }
+        } catch (err) {
+            alert("Failed to delete user");
+        }
+    }
+
+    async function editUser(id, currentRole) {
+        const newRole = prompt("Enter new role (Doctor, HCW, Patient, Driver, Admin):", currentRole);
+        if (!newRole || newRole === currentRole) return;
+        
+        try {
+            const res = await fetch('/api/admin/update_user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, role: newRole })
+            });
+            if (res.ok) {
+                alert("User role updated successfully");
+                loadUsers();
+            } else {
+                const data = await res.json();
+                alert(data.error);
+            }
+        } catch (err) {
+            alert("Failed to update user");
+        }
+    }
+
+    async function loadHospitals() {
+        try {
+            const res = await fetch('/api/admin/hospitals');
+            const data = await res.json();
+            if (data.hospitals) {
+                const tbody = document.getElementById('hospital-table-body');
+                tbody.innerHTML = data.hospitals.map(h => `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem; font-weight: 600;">${h.name}</td>
+                        <td style="padding: 1rem;">${h.record_count}</td>
+                        <td style="padding: 1rem;">
+                            <span style="color: #22c55e; font-weight: 600;">
+                                <i class="fas fa-check-circle mr-1"></i> Active
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <button class="btn btn-outline" style="padding: 0.3rem 0.7rem; font-size: 0.8rem;">View Records</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (err) {
+            console.error("Failed to load hospitals:", err);
+        }
+    }
+
+    async function loadStats() {
+        try {
+            const res = await fetch('/api/admin/stats');
+            const data = await res.json();
+            const grid = document.getElementById('stats-grid');
+            grid.innerHTML = `
+                <div class="chart-card" style="text-align: center;">
+                    <i class="fas fa-users" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${data.total_users}</h2>
+                    <p style="color: #64748b;">Total Users</p>
+                </div>
+                <div class="chart-card" style="text-align: center;">
+                    <i class="fas fa-user-md" style="font-size: 2rem; color: #10b981; margin-bottom: 1rem;"></i>
+                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${data.total_doctors}</h2>
+                    <p style="color: #64748b;">Total Doctors</p>
+                </div>
+                <div class="chart-card" style="text-align: center;">
+                    <i class="fas fa-user-injured" style="font-size: 2rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${data.total_patients}</h2>
+                    <p style="color: #64748b;">Total Patients</p>
+                </div>
+                <div class="chart-card" style="text-align: center;">
+                    <i class="fas fa-file-medical" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 1rem;"></i>
+                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${data.total_records}</h2>
+                    <p style="color: #64748b;">Medical Records</p>
+                </div>
+            `;
+        } catch (err) {
+            console.error("Failed to load stats:", err);
+        }
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', loadTrends);
+</script>
+{% endblock %}

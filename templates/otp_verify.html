@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="verify-container" style="max-width: 450px; width: 100%; margin: 5rem auto; padding: 0 1rem;">
+    <div class="glass-card" style="text-align: center; padding: 3rem 2rem;">
+        <div
+            style="width: 80px; height: 80px; background: rgba(79, 70, 229, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); margin: 0 auto 2rem;">
+            <i class="fas fa-envelope-open-text" style="font-size: 2.5rem;"></i>
+        </div>
+
+        <h2 style="margin-bottom: 1rem; font-family: 'Playfair Display', serif; color: var(--dark);"
+            data-i18n="verify_email">Verify Your Email
+        </h2>
+        <p style="color: var(--text-dark); margin-bottom: 2.5rem; line-height: 1.6;">
+            <span data-i18n="verify_desc_1">We've sent a 6-digit verification code to</span> <br>
+            <strong style="color: var(--dark);">{{ email }}</strong>. <br>
+            <span data-i18n="verify_desc_2">Please enter it below to activate your account.</span>
+        </p>
+
+        <form id="verifyForm" method="POST">
+            <div style="margin-bottom: 2rem;">
+                <input type="text" name="otp" required maxlength="6" placeholder="000000"
+                    style="font-size: 2rem; letter-spacing: 0.5rem; text-align: center; font-weight: 700; color: var(--primary); background: rgba(255,255,255,0.5);">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;"
+                data-i18n="verify_activate">Verify
+                & Activate</button>
+        </form>
+
+        <p style="margin-top: 2rem; font-size: 0.9rem; color: #64748b;">
+            <span data-i18n="didnt_receive_code">Didn't receive the code?</span> <a
+                href="{{ url_for('auth.resend_otp', user_id=user_id) }}"
+                style="color: var(--primary); font-weight: 600; text-decoration: none;" data-i18n="resend_otp">Resend
+                OTP</a>
+        </p>
+
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed rgba(0,0,0,0.1);">
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">
+                <span data-i18n="change_email">Entered the wrong email?</span> <a href="javascript:void(0)"
+                    onclick="toggleEmailEdit()" style="color: #6366f1; text-decoration: underline;"
+                    data-i18n="change_email">Change Email Address</a>
+            </p>
+
+            <form id="changeEmailForm" action="{{ url_for('auth.change_email', user_id=user_id) }}" method="POST"
+                style="display: none;">
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="email" name="new_email" placeholder="Enter correct email" required
+                        style="flex: 1; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleEmailEdit() {
+        const form = document.getElementById('changeEmailForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    document.getElementById('verifyForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+            const res = await fetch("{{ url_for('auth.verify_otp', user_id=user_id) }}", {
+                method: "POST",
+                headers: { "Accept": "application/json" },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                showSuccess("Email Verified!", data.redirect);
+            } else {
+                alert(data.error || "Verification failed");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+</script>
+{% endblock %}

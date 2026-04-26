@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: meddigit-ai
+    env: docker
+    plan: free
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    disk:
+      name: meddigit-sqlite-data
+      mountPath: /app/instance
+      sizeGB: 1

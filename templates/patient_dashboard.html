@@ -1,0 +1,2654 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .record-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        display: flex;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .record-card:hover {
+        background: var(--cream);
+        transform: translateY(-4px);
+        border-color: var(--primary);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .record-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .type-prescription {
+        background: rgba(129, 140, 248, 0.2);
+        color: #818cf8;
+    }
+
+    .type-lab-report {
+        background: rgba(52, 211, 153, 0.2);
+        color: #34d399;
+    }
+
+    .type-clinical-notes {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    .type-imaging {
+        background: rgba(236, 72, 153, 0.2);
+        color: #ec4899;
+    }
+
+    .type-other {
+        background: rgba(148, 163, 184, 0.2);
+        color: #94a3b8;
+    }
+
+    .record-details {
+        flex: 1;
+    }
+
+    .record-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--dark);
+    }
+
+    .record-meta {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag {
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+    }
+
+    .sidebar-mini {
+        width: 280px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .sidebar-link {
+        padding: 1rem 1.25rem;
+        border-radius: 0.75rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 500;
+    }
+
+    .sidebar-link:hover {
+        background: var(--cream);
+        color: var(--primary);
+    }
+
+    .sidebar-link.active {
+        background: var(--primary);
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(230, 126, 80, 0.2);
+        font-weight: 700;
+    }
+
+
+    /* Removed old active gradient class */
+
+
+    .status-badge {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.4rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    #record-viewer-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(2, 6, 23, 0.95);
+        z-index: 3000;
+        display: none;
+        padding: 2rem;
+        box-sizing: border-box;
+    }
+
+    .viewer-content {
+        background: #1e293b;
+        border-radius: 1.5rem;
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+    }
+
+    .viewer-image-container {
+        background: #0f172a;
+        position: relative;
+        overflow-y: auto;
+        display: block;
+        padding: 2rem;
+    }
+
+    .viewer-image-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+        display: block;
+    }
+
+    .viewer-back-btn {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        margin-bottom: 1rem;
+        background: #1e293b !important;
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(8px);
+    }
+
+    .viewer-details {
+        padding: 2.5rem;
+        overflow-y: auto;
+        border-left: 1px solid var(--glass-border);
+    }
+
+    .filter-btn {
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        color: #94a3b8;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        border-color: var(--primary);
+        color: #fff;
+        background: var(--primary);
+    }
+
+    /* Responsive Adjustments */
+    @media screen and (max-width: 992px) {
+        .dashboard-container {
+            flex-direction: column !important;
+            gap: 2rem !important;
+        }
+
+        .sidebar-mini {
+            width: 100% !important;
+            flex-direction: row !important;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-link {
+            white-space: nowrap;
+        }
+
+        .sidebar-mini div[style*="text-transform: uppercase"] {
+            display: none !important;
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .record-card {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            position: static;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .viewer-content {
+            grid-template-columns: 1fr !important;
+        }
+
+        .viewer-details {
+            border-left: none !important;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        #records-tab div[style*="justify-content: space-between"] {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+
+        .tag-container {
+            justify-content: flex-start;
+        }
+    }
+
+    /* Ported Upload Modal Styles */
+    .type-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .type-card:hover,
+    .type-card.selected {
+        background: rgba(230, 126, 80, 0.1);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .type-card i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-area {
+        border: 2px dashed var(--glass-border);
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.02);
+        cursor: pointer;
+    }
+
+    .upload-area:hover,
+    .upload-area.active {
+        border-color: var(--primary);
+        background: rgba(230, 126, 80, 0.05);
+    }
+
+    #upload-modal .glass-card {
+        background: #1e293b;
+        color: #fff;
+    }
+
+    #upload-modal input[type="text"],
+    #upload-modal textarea {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+    }
+
+    /* Tracking Map */
+    #tracking-map {
+        height: 300px;
+        border-radius: 1rem;
+        border: 1px solid var(--glass-border);
+        margin: 1.5rem 0;
+        display: none;
+    }
+
+    /* Vertical Timeline Styles */
+    .timeline-container {
+        display: none;
+        margin-top: 2rem;
+        text-align: left;
+        padding-left: 2rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+        padding-left: 2rem;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        background: #cbd5e1;
+        border-radius: 50%;
+        z-index: 2;
+    }
+
+    .timeline-line {
+        position: absolute;
+        left: 5px;
+        top: 12px;
+        width: 2px;
+        height: 100%;
+        background: #cbd5e1;
+        z-index: 1;
+    }
+
+    .timeline-item:last-child .timeline-line {
+        display: none;
+    }
+
+    .timeline-content h4 {
+        margin: 0;
+        font-size: 1rem;
+        color: #94a3b8;
+    }
+
+    .timeline-content p {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    /* Active State */
+    .timeline-item.active .timeline-dot {
+        background: #34d399;
+        box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+    }
+
+    .timeline-item.active .timeline-line {
+        background: #34d399;
+    }
+
+    .timeline-item.active .timeline-content h4 {
+        color: #fff;
+    }
+
+    .timeline-item.active .timeline-content p {
+        color: #34d399;
+    }
+
+    /* Search Bar Styles */
+    .medical-search-container {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .medical-search-container i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dark);
+        pointer-events: none;
+        transition: color 0.3s;
+    }
+
+    .medical-search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        color: var(--dark);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+
+    .medical-search-input:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(230, 126, 80, 0.15);
+        outline: none;
+    }
+
+    .medical-search-input:focus+i {
+        color: var(--primary);
+    }
+
+    /* Symptom Checker Styles */
+    .symptom-chip {
+        padding: 0.6rem 1.25rem;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .symptom-chip:hover {
+        border-color: var(--primary);
+        background: var(--cream);
+    }
+
+    .symptom-chip.selected {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(230, 126, 80, 0.2);
+    }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" style="display: flex; gap: 3rem; align-items: flex-start;">
+    <!-- Sidebar -->
+    <div class="sidebar-mini">
+        <div style="padding: 1rem 1.25rem; font-size: 0.8rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; font-weight: 600;"
+            data-i18n="main_menu">
+            Main Menu</div>
+        <a href="#" class="sidebar-link active" onclick="showTab('dashboard')" data-i18n="dashboard">
+            <i class="fas fa-th-large"></i> Dashboard
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('records')" data-i18n="medical_records">
+            <i class="fas fa-file-medical"></i> My Records
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('family')" data-i18n="family_records">
+            <i class="fas fa-users"></i> Family Records
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('emergency')" data-i18n="emergency_sos">
+
+            <i class="fas fa-ambulance"></i> Emergency
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('security')" data-i18n="security_access">
+            <i class="fas fa-shield-halved"></i> Security & Access
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('schemes')" data-i18n="govt_schemes">
+            <i class="fas fa-hand-holding-medical"></i> Govt Schemes
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('recommendations')" data-i18n="doctor_recommendations">
+            <i class="fas fa-user-md-medical"></i> Doctor Recommendations
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('symptom-checker')" data-i18n="symptom_checker">
+            <i class="fas fa-stethoscope"></i> Symptom Checker
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('visualization')" data-i18n="visualization">
+            <i class="fas fa-chart-line"></i> Patient Data Visualization
+        </a>
+        <a href="#" class="sidebar-link" onclick="showTab('skin-checker')" data-i18n="skin_checker">
+            <i class="fas fa-search-plus"></i> Skin Checker
+        </a>
+        <div
+            style="margin-top: 2rem; padding: 1rem 1.25rem; font-size: 0.8rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; font-weight: 600;" data-i18n="account">
+            Account</div>
+        <a href="{{ url_for('main.profile') }}" class="sidebar-link">
+            <i class="fas fa-user-gear"></i> Settings
+        </a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div style="flex: 1;">
+        <!-- Welcome Banner -->
+        <div id="dashboard-tab">
+            <div class="glass-card"
+                style="background: linear-gradient(135deg, rgba(230, 126, 80, 0.1), rgba(125, 211, 192, 0.1)); border-color: rgba(230, 126, 80, 0.2); padding: 2.5rem; margin-bottom: 2.5rem; border-radius: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1
+                            style="margin: 0; font-size: 2.2rem; color: var(--dark); background: none; -webkit-text-fill-color: initial; font-family: 'Playfair Display', serif;">
+                            <span data-i18n="welcome_back">Welcome back</span>, {{ current_user.full_name }}!
+                        </h1>
+                        <p style="color: var(--text-dark); margin-top: 0.5rem; font-size: 1.1rem;"
+                            data-i18n="system_ready">Your medical digitization system is ready.</p>
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button class="btn btn-primary" onclick="openUploadModal()"
+                                style="padding: 0.8rem 2rem; border-radius: 1rem;" data-i18n="upload_record">
+                                <i class="fas fa-plus-circle" style="margin-right: 0.5rem;"></i> Upload Record
+                            </button>
+                            <button class="btn btn-outline" onclick="showTab('records')"
+                                style="padding: 0.8rem 2rem; border-radius: 1rem; border-color: var(--primary); color: var(--primary);"
+                                data-i18n="view_records">
+                                <i class="fas fa-file-medical" style="margin-right: 0.5rem;"></i> View Records
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="responsive-sidebar-layout" style="display: grid; grid-template-columns: 1fr 400px; gap: 2rem;">
+                <div class="glass-card">
+                    <h3><i class="fas fa-clock-rotate-left" style="color: var(--accent); margin-right: 0.5rem;"></i>
+                        <span data-i18n="recent_activity">Recent Activity</span>
+                    </h3>
+                    <div id="recent-list" style="color: var(--text-dark); font-size: 0.95rem;" data-i18n="loading">
+                        Loading...
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <h3><i class="fas fa-shield-halved" style="color: var(--secondary); margin-right: 0.5rem;"></i>
+                        <span data-i18n="health_tips">Health Tips</span>
+                    </h3>
+                    <p style="color: var(--text-dark); line-height: 1.6;" data-i18n="tip_content">Stay hydrated and
+                        maintain a regular exercise
+                        routine. Your recent records show a positive trend in health metrics!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Tab -->
+        <div id="records-tab" style="display: none;">
+            <div style="margin-bottom: 2.5rem;">
+                <!-- Row 1: Title and Profile Selector -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="margin: 0;" data-i18n="medical_records">Medical Records</h2>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="color: var(--text-dark); font-size: 0.95rem; font-weight: 600;">View records
+                            for:</span>
+                        <select id="profile-selector" class="medical-search-input"
+                            style="padding-left: 1rem; width: 220px; font-weight: 700; color: var(--primary); border: 2px solid var(--primary); background: #fff;"
+                            onchange="loadRecords()">
+                            <option value="">My Own Records</option>
+                            <!-- Family members will be loaded here -->
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- Row 2: Search and Filters -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                    <div class="medical-search-container" style="flex: 1; min-width: 300px;">
+                        <input type="text" id="medical-record-search" class="medical-search-input"
+                            placeholder="Search symptoms, meds, hospital..." onkeyup="applyFilters()">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="tag-container" style="gap: 0.75rem;">
+                        <button class="filter-btn active" onclick="updateCategory('All')">All Types</button>
+                        <button class="filter-btn" onclick="updateCategory('Prescription')">Prescription</button>
+                        <button class="filter-btn" onclick="updateCategory('Lab Report')">Lab Reports</button>
+                        <button class="filter-btn" onclick="updateCategory('Imaging')">Imaging</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="records-list">
+                <!-- Records will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Emergency Tab -->
+        <div id="emergency-tab" style="display: none;">
+            <div class="glass-card" id="request-view" style="text-align: center; padding: 4rem 2rem;">
+                <div
+                    style="width: 100px; height: 100px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem auto; font-size: 3rem; border: 2px solid rgba(239, 68, 68, 0.2);">
+                    <i class="fas fa-ambulance"></i>
+                </div>
+                <h2 style="font-size: 2rem; margin-bottom: 1rem;" data-i18n="emergency_sos">Need Emergency Help?</h2>
+                <p style="color: #94a3b8; max-width: 500px; margin: 0 auto 2.5rem auto; line-height: 1.6;">Request
+                    ambulance assistance by sharing your location. Our system will alert the nearest available driver
+                    immediately.</p>
+                <button id="request-btn" class="btn"
+                    style="background: #ef4444; color: #fff; padding: 1.2rem 3rem; border-radius: 1.25rem; font-size: 1.1rem; box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);"
+                    onclick="requestAmbulance()" data-i18n="emergency_sos">
+                    Request Ambulance
+                </button>
+            </div>
+
+            <div class="glass-card" id="tracking-view" style="display: none; padding: 2.5rem;">
+                <h2 style="margin-bottom: 1rem;"><i class="fas fa-truck-medical" style="color: #ef4444;"></i> Tracking
+                    Ambulance</h2>
+                <div id="status-alert"
+                    style="background: rgba(52, 211, 153, 0.1); border: 1px solid #34d399; color: #34d399; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; display: none;">
+                    <strong>Success!</strong> A driver is on the way to your location.
+                </div>
+
+                <div id="tracking-map"></div>
+
+                <div class="timeline-container" id="tracking-timeline" style="display: block;">
+                    <div class="timeline-item active" id="step-requested">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <h4>Requested</h4>
+                            <p id="time-requested">Waiting for confirmation...</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-accepted">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <h4>Accepted</h4>
+                            <p id="driver-info">Finding nearest driver...</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-onway">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <h4>On the Way</h4>
+                            <p>Driver is navigating to you</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="step-arrived">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-content">
+                            <h4>Arrived</h4>
+                            <p>Ambulance is at your location</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Family Records Tab -->
+        <div id="family-tab" style="display: none;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; gap: 2rem;">
+                <h2 style="margin: 0; white-space: nowrap;" data-i18n="family_records">Manage Family Records</h2>
+                <button class="btn btn-primary" onclick="openAddFamilyModal()">
+                    <i class="fas fa-user-plus" style="margin-right: 0.5rem;"></i> Add Family Member
+                </button>
+            </div>
+
+            <div id="family-list"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Family members will be loaded here -->
+            </div>
+        </div>
+
+        <div id="security-tab" style="display: none;">
+            <div class="glass-card"
+                style="margin-bottom: 2rem; background: var(--white); border: 1px solid var(--border);">
+                <h2 style="margin-bottom: 2.5rem; color: var(--dark); font-family: 'Playfair Display', serif; font-weight: 800;"
+                    data-i18n="security_access">
+                    <i class="fas fa-shield-halved" style="color: var(--primary); margin-right: 0.75rem;"></i> Manage
+                    Doctor Access
+                </h2>
+                <p style="color: var(--text-dark); margin-bottom: 2.5rem; line-height: 1.6; font-weight: 500;">Search
+                    for doctors by Name or ID to
+                    grant them permission to view your medical records. You can revoke access at any time.</p>
+
+                <div style="position: relative; margin-bottom: 3rem;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 1.1rem;"></i>
+                    <input type="text" id="doctor-search"
+                        placeholder="Search doctor by name (e.g., Dr. Smith) or identification number..."
+                        style="width: 100%; padding: 1.25rem 1.25rem 1.25rem 3.5rem; background: var(--cream); border: 1px solid var(--border); border-radius: 1.25rem; color: var(--dark); font-size: 1rem; transition: all 0.3s; font-weight: 500;"
+                        onkeyup="doDoctorSearch(this.value)">
+                    <div id="search-results"
+                        style="position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid var(--glass-border); border-radius: 1rem; margin-top: 0.75rem; z-index: 100; display: none; max-height: 400px; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);">
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border); padding-top: 2.5rem;">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--dark); font-weight: 700;"><i
+                            class="fas fa-user-check" style="color: #34d399; margin-right: 0.75rem;"></i> Authorized
+                        Doctors</h3>
+                    <div id="authorized-doctors-list">
+                        <!-- Doctors will be loaded here -->
+                        <div
+                            style="text-align: center; padding: 3rem; background: var(--cream); border-radius: 1rem; border: 1px dashed var(--border);">
+                            <i class="fas fa-user-shield"
+                                style="font-size: 2.5rem; color: var(--primary); opacity: 0.2; margin-bottom: 1rem; display: block;"></i>
+                            <p style="color: var(--text-dark); font-weight: 500; margin: 0;">No doctors currently have
+                                access
+                                to your records.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Govt Schemes Tab -->
+        <div id="schemes-tab" style="display: none;">
+            <div class="glass-card"
+                style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(52, 211, 153, 0.05), rgba(79, 70, 229, 0.05)); border-color: rgba(52, 211, 153, 0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h2
+                            style="margin: 0; color: #1e293b; font-family: 'Playfair Display', serif; font-weight: 800;">
+                            <i class="fas fa-hand-holding-heart" style="color: #059669; margin-right: 0.75rem;"></i>
+                            <span data-i18n="govt_schemes">Personalized Govt Schemes</span>
+                        </h2>
+                        <p style="color: #475569; margin-top: 0.5rem; font-weight: 500;">AI-matched government
+                            assistance programs
+                            based on your medical history.</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="loadSchemes()"
+                        style="border-color: #34d399; color: #34d399;">
+                        <i class="fas fa-sync-alt" style="margin-right: 0.5rem;"></i> Refresh Suggestions
+                    </button>
+                </div>
+
+                <!-- Health Card Section -->
+                <div
+                    style="background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3
+                        style="margin: 0 0 1rem 0; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 700;">
+                        <i class="fas fa-id-card" style="color: #0f172a;"></i> Your Health Card Details
+                    </h3>
+                    <div class="responsive-grid-3"
+                        style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
+                        <div>
+                            <label
+                                style="display: block; color: #1e293b; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">Card
+                                Type</label>
+                            <select id="card-type"
+                                style="width: 100%; background: #fff; border: 1px solid #cbd5e1; color: #1e293b; padding: 0.6rem; border-radius: 0.5rem; font-weight: 500;">
+                                <option value="">Select Type...</option>
+                                <option value="Arogyasri">Arogyasri (AP/Telangana)</option>
+                                <option value="Ayushmaan Bharat">Ayushman Bharat (PM-JAY)</option>
+                                <option value="State Specific">State Specific Scheme</option>
+                                <option value="Private Insurance">Private Health Insurance</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label
+                                style="display: block; color: #1e293b; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">Card
+                                Number</label>
+                            <input type="text" id="card-number" placeholder="Enter Card Number..."
+                                style="width: 100%; background: #fff; border: 1px solid #cbd5e1; color: #1e293b; padding: 0.6rem; border-radius: 0.5rem; font-weight: 500;">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveHealthCard()" style="padding: 0.6rem 1.5rem;">Save
+                            Details</button>
+                    </div>
+                </div>
+
+                <div id="schemes-loading" style="display: none; text-align: center; padding: 4rem;">
+                    <i class="fas fa-circle-notch fa-spin"
+                        style="font-size: 3rem; color: #34d399; margin-bottom: 1.5rem;"></i>
+                    <p style="color: #cbd5e1; font-size: 1.1rem;">AI is analyzing your records to find matching
+                        schemes...</p>
+                </div>
+
+                <div id="schemes-container"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+                    <!-- Schemes will be loaded here -->
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem; opacity: 0.6;">
+                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>Click "Refresh Suggestions" to see relevant health schemes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Recommendation Tab -->
+        <div id="recommendations-tab" style="display: none;">
+            <div class="glass-card"
+                style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(6, 182, 212, 0.05)); border: 1px solid rgba(79, 70, 229, 0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h2
+                            style="margin: 0; color: #1e293b; font-family: 'Playfair Display', serif; font-weight: 800;">
+                            <i class="fas fa-user-md-medical" style="color: #4f46e5; margin-right: 0.75rem;"></i>
+                            <span data-i18n="doctor_recommendations">Personalized Doctor Recommendations</span>
+                        </h2>
+                        <p style="color: #475569; margin-top: 0.5rem; font-weight: 500;">AI analyzes your symptoms and
+                            medical history to find the perfect specialist.</p>
+                    </div>
+                </div>
+
+                <div id="recs-loading" style="display: none; text-align: center; padding: 4rem;">
+                    <i class="fas fa-brain fa-beat" style="font-size: 3rem; color: #4f46e5; margin-bottom: 1.5rem;"></i>
+                    <p style="color: #475569; font-size: 1.1rem; font-weight: 600;">AI is matching you with local
+                        specialists...</p>
+                </div>
+
+                <div id="recs-container"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem; opacity: 0.6;">
+                        <i class="fas fa-user-doctor"
+                            style="font-size: 3.5rem; margin-bottom: 1.5rem; display: block; color: #94a3b8;"></i>
+                        <p style="color: #475569; font-weight: 600;">Click "Generate New Matches" to see recommended
+                            specialists.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Symptom Checker Tab -->
+        <!-- Skin Checker Tab -->
+        <div id="skin-checker-tab" style="display: none;">
+            <div class="glass-card" style="padding: 2.5rem; border-radius: 2rem;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <i class="fas fa-search-plus" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                    <h2 style="margin: 0; font-family: 'Playfair Display', serif; font-size: 2rem;" data-i18n="skin_classifier_title">Skin Condition Classifier</h2>
+                    <p style="color: #64748b; margin-top: 0.5rem;" data-i18n="skin_classifier_desc">Upload an image of your skin condition for an AI-powered preliminary analysis.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <!-- Upload Area -->
+                    <div>
+                        <div class="upload-area" id="skin-upload-area" style="height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; border: 2px dashed var(--border); border-radius: 1.5rem; transition: all 0.3s;" onmouseover="this.style.borderColor='var(--primary)'; this.style.background='rgba(230, 126, 80, 0.05)'" onmouseout="this.style.borderColor='var(--border)'; this.style.background='transparent'">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                            <h3 style="margin: 0; color: var(--dark);" data-i18n="upload_skin_image">Upload Skin Image</h3>
+                            <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.5rem; text-align: center; padding: 0 1rem;" data-i18n="skin_upload_desc">Click or drag and drop image here</p>
+                            <input type="file" id="skin-image-input" accept="image/*" style="display: none;" onchange="previewSkinImage(event)">
+                            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                <button class="btn btn-outline" onclick="event.stopPropagation(); document.getElementById('skin-image-input').click()" style="padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 0.75rem;" data-i18n="view_records">
+                                    <i class="fas fa-file-image mr-1"></i> Choose File
+                                </button>
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); startSkinScan()" style="padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 0.75rem;" data-i18n="easy_capture">
+                                    <i class="fas fa-camera mr-1"></i> Scan with Camera
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Camera Preview Area -->
+                        <div id="skin-camera-container" style="display: none; height: 300px; border-radius: 1rem; overflow: hidden; position: relative; background: #000; border: 1px solid var(--border);">
+                            <video id="skin-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+                            <canvas id="skin-capture-canvas" style="display: none;"></canvas>
+                            <div style="position: absolute; bottom: 1rem; left: 0; right: 0; display: flex; justify-content: center; gap: 1rem;">
+                                <button class="btn btn-primary" onclick="captureSkinScan()" style="padding: 0.6rem 1.2rem; border-radius: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                                    <i class="fas fa-camera"></i> Capture
+                                </button>
+                                <button class="btn btn-outline" onclick="stopSkinScan()" style="padding: 0.6rem 1.2rem; border-radius: 2rem; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #fff;">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                        <div id="skin-preview-container" style="display: none; height: 300px; border-radius: 1rem; overflow: hidden; position: relative;">
+                            <img id="skin-preview" style="width: 100%; height: 100%; object-fit: cover;" src="">
+                            <button class="btn btn-outline" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: #fff; border: none; padding: 0.5rem;" onclick="resetSkinUpload()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" id="analyze-skin-btn" style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem; display: none;" onclick="analyzeSkin()" data-i18n="analyze_image">
+                            <i class="fas fa-brain mr-2"></i> Analyze Image
+                        </button>
+                    </div>
+
+                    <!-- Results Area -->
+                    <div id="skin-results-area" class="glass-card" style="background: rgba(255,255,255,0.02); height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                        <div id="skin-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                            <p style="color: #64748b;" data-i18n="loading">AI is analyzing your image...</p>
+                        </div>
+                        <div id="skin-initial-state">
+                            <i class="fas fa-file-image" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                            <p style="color: #94a3b8;" data-i18n="no_records">Upload an image to see results here</p>
+                        </div>
+                        <div id="skin-analysis-results" style="display: none; width: 100%; text-align: left;">
+                            <h3 style="margin-top: 0; color: var(--dark); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;" data-i18n="analysis_results">Analysis Results</h3>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; color: #64748b; text-transform: uppercase; font-weight: 600;" data-i18n="predicted_condition">Predicted Condition</label>
+                                <div id="skin-condition-name" style="font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-top: 0.25rem;">-</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.85rem; color: #64748b; text-transform: uppercase; font-weight: 600;" data-i18n="confidence_level">Confidence Level</label>
+                                <div id="skin-confidence" style="display: inline-block; margin-top: 0.25rem; padding: 0.25rem 0.75rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 600;">-</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="font-size: 0.85rem; color: #64748b; text-transform: uppercase; font-weight: 600;" data-i18n="guidance_precautions">Guidance & Precautions</label>
+                                <p id="skin-guidance" style="color: var(--text-dark); font-size: 0.95rem; margin-top: 0.25rem; line-height: 1.5;">-</p>
+                            </div>
+
+                            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 1rem; border-radius: 0.75rem;">
+                                <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                                    <i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-top: 0.2rem;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; color: #ef4444; font-size: 0.9rem; margin-bottom: 0.25rem;" data-i18n="medical_disclaimer">Medical Disclaimer</div>
+                                        <div id="skin-disclaimer" style="font-size: 0.85rem; color: #7f1d1d; line-height: 1.4;">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="symptom-checker-tab" style="display: none;">
+            <div class="glass-card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(230, 126, 80, 0.05), rgba(251, 191, 36, 0.05)); border-color: rgba(230, 126, 80, 0.2);">
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="margin: 0; color: #1e293b; font-family: 'Playfair Display', serif; font-weight: 800;">
+                        <i class="fas fa-stethoscope" style="color: var(--primary); margin-right: 0.75rem;"></i>
+                        <span data-i18n="ai_symptom_checker">AI Symptom Checker</span>
+                    </h2>
+                    <p style="color: #475569; margin-top: 0.5rem; font-weight: 500;" data-i18n="hero_subtitle">Select your symptoms to get instant AI-powered health insights and guidance.</p>
+                </div>
+
+                <!-- Symptom Checklist -->
+                <div style="background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.05); border-radius: 1.5rem; padding: 2rem; margin-bottom: 2rem;">
+                    <h3 style="margin: 0 0 1.5rem 0; color: #1e293b; font-size: 1.1rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 700;">
+                        <i class="fas fa-list-check" style="color: #0f172a;"></i> <span data-i18n="select_symptoms">Select Symptoms</span>
+                    </h3>
+                    
+                    <div id="symptom-list" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem;">
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Fever')">Fever</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Headache')">Headache</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Cough')">Cough</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Chest Pain')">Chest Pain</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Fatigue')">Fatigue</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Shortness of Breath')">Shortness of Breath</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Nausea')">Nausea</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Dizziness')">Dizziness</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Sore Throat')">Sore Throat</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Muscle Pain')">Muscle Pain</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Joint Pain')">Joint Pain</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Rash')">Rash</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Abdominal Pain')">Abdominal Pain</div>
+                        <div class="symptom-chip" onclick="toggleSymptom(this, 'Diarrhea')">Diarrhea</div>
+                    </div>
+
+                    <!-- Custom Symptom Input -->
+                    <div style="margin-top: 1.5rem; position: relative; margin-bottom: 2rem;">
+                        <i class="fas fa-search" style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                        <input type="text" id="custom-symptom-input" placeholder="Search or add symptoms (e.g. Fever, Cough)..." data-i18n="search_add_symptoms"
+                               style="width: 100%; padding: 0.85rem 1rem 0.85rem 3rem; border-radius: 1rem; border: 1px solid var(--border); background: #f8fafc; font-weight: 500; font-size: 0.95rem; transition: all 0.3s;"
+                               onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(230, 126, 80, 0.1)'"
+                               onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+                               oninput="filterSymptoms()"
+                               onkeypress="if(event.key === 'Enter') addCustomSymptom()">
+                    </div>
+                    <div id="custom-symptoms-container" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem;"></div>
+
+                    <div style="text-align: center;">
+                        <button class="btn btn-primary" onclick="analyzeSymptoms()" style="padding: 1rem 3rem; border-radius: 1.25rem; font-size: 1.1rem;" data-i18n="analyze_symptoms">
+                            <i class="fas fa-wand-magic-sparkles" style="margin-right: 0.5rem;"></i> Analyze Symptoms
+                        </button>
+                    </div>
+                </div>
+
+                <div id="symptom-loading" style="display: none; text-align: center; padding: 4rem;">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <p style="color: #64748b; font-size: 1.1rem;" data-i18n="loading">AI is analyzing your symptoms...</p>
+                </div>
+
+                <div id="symptom-results" style="display: none;">
+                    <div class="glass-card" style="background: #fff; border: 1px solid var(--border); padding: 2.5rem;">
+                        <h3 id="result-title" style="color: var(--dark); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;" data-i18n="analysis_results">
+                            <i class="fas fa-file-medical-alt" style="color: #34d399;"></i> AI Analysis Results
+                        </h3>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <h4 style="color: var(--primary); font-size: 1rem; margin-bottom: 1rem;" data-i18n="possible_conditions">Possible Conditions</h4>
+                            <div id="possible-conditions" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                        </div>
+
+                        <div style="margin-bottom: 2rem;">
+                            <h4 style="color: var(--primary); font-size: 1rem; margin-bottom: 1rem;" data-i18n="health_guidance">Health Guidance</h4>
+                            <ul id="health-guidance" style="padding-left: 1.5rem; color: var(--text-dark); line-height: 1.6;"></ul>
+                        </div>
+
+                        <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 1.5rem; border-radius: 1rem;">
+                            <h4 style="color: #ef4444; font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;" data-i18n="medical_disclaimer">
+                                <i class="fas fa-triangle-exclamation"></i> Medical Disclaimer
+                            </h4>
+                            <p id="medical-disclaimer" style="font-size: 0.85rem; color: #4b5563; line-height: 1.5; margin: 0;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Patient Data Visualization Tab -->
+        <div id="visualization-tab" style="display: none;">
+            <div class="glass-card" style="margin-bottom: 2.5rem; background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(79, 70, 229, 0.05)); border-color: rgba(6, 182, 212, 0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h2 style="margin: 0; color: #1e293b; font-family: 'Playfair Display', serif; font-weight: 800;">
+                            <i class="fas fa-chart-area" style="color: #06b6d4; margin-right: 0.75rem;"></i>
+                            <span data-i18n="visualization">Patient Data Visualization</span>
+                        </h2>
+                        <p style="color: #475569; margin-top: 0.5rem; font-weight: 500;" data-i18n="ai_insights_desc">Monitor your health trends and vitals over time with AI-powered insights.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openVitalsModal()" style="border-radius: 1rem; padding: 0.75rem 1.5rem;" data-i18n="log_new_vitals">
+                        <i class="fas fa-plus-circle" style="margin-right: 0.5rem;"></i> Log New Vitals
+                    </button>
+                </div>
+
+                <!-- Charts Grid -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                    <div style="background: var(--white); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        <h3 style="margin: 0 0 1rem 0; color: #ef4444; font-size: 0.9rem;"><i class="fas fa-heartbeat"></i> <span data-i18n="heart_rate">Heart Rate</span></h3>
+                        <div style="height: 160px; position: relative;">
+                            <canvas id="heartRateChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: var(--white); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        <h3 style="margin: 0 0 1rem 0; color: #3b82f6; font-size: 0.9rem;"><i class="fas fa-droplet"></i> <span data-i18n="blood_pressure">Blood Pressure</span></h3>
+                        <div style="height: 160px; position: relative;">
+                            <canvas id="bpChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: var(--white); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        <h3 style="margin: 0 0 1rem 0; color: #f59e0b; font-size: 0.9rem;"><i class="fas fa-temperature-high"></i> <span data-i18n="temperature">Temperature</span></h3>
+                        <div style="height: 160px; position: relative;">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: var(--white); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        <h3 style="margin: 0 0 1rem 0; color: #06b6d4; font-size: 0.9rem;"><i class="fas fa-lungs"></i> <span data-i18n="spo2">SpO2</span></h3>
+                        <div style="height: 160px; position: relative;">
+                            <canvas id="spo2Chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vitals Table/Log -->
+            <div class="glass-card" style="background: #fff; border: 1px solid var(--border);">
+                <h3 style="margin-bottom: 1.5rem; color: var(--dark);" data-i18n="vitals_log_history">Vitals Log History</h3>
+                <div id="vitals-table-container" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #f1f5f9; text-align: left;">
+                                <th style="padding: 1rem; color: #64748b; font-weight: 600;" data-i18n="language">Date & Time</th>
+                                <th style="padding: 1rem; color: #64748b; font-weight: 600;" data-i18n="heart_rate">Heart Rate</th>
+                                <th style="padding: 1rem; color: #64748b; font-weight: 600;" data-i18n="blood_pressure">BP (Sys/Dia)</th>
+                                <th style="padding: 1rem; color: #64748b; font-weight: 600;" data-i18n="temperature">Temp</th>
+                                <th style="padding: 1rem; color: #64748b; font-weight: 600;" data-i18n="spo2">SpO2</th>
+                                <th style="padding: 1rem; color: #64748b; font-weight: 600;" data-i18n="ai_insights">Analysis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vitals-log-body">
+                            <!-- Rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Log Vitals Modal -->
+        <div id="vitals-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.85); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+            <div class="glass-card" style="width: 500px; background: #fff; padding: 2.5rem; border-radius: 1.5rem;">
+                <h2 style="margin: 0 0 2rem 0; color: var(--dark); font-family: 'Playfair Display', serif;">
+                    <i class="fas fa-heart-pulse" style="color: var(--primary); margin-right: 0.75rem;"></i> Log Vitals
+                </h2>
+                <form id="vitals-form" onsubmit="handleVitalsSubmit(event)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #64748b;">Heart Rate (BPM)</label>
+                            <input type="number" name="heart_rate" required placeholder="e.g. 72" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #64748b;">SpO2 (%)</label>
+                            <input type="number" name="spo2" required placeholder="e.g. 98" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #64748b;">Systolic BP (High)</label>
+                            <input type="number" name="blood_pressure_sys" required placeholder="e.g. 120" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #64748b;">Diastolic BP (Low)</label>
+                            <input type="number" name="blood_pressure_dia" required placeholder="e.g. 80" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #64748b;">Temperature (°C)</label>
+                            <input type="number" step="0.1" name="temperature" required placeholder="e.g. 36.6" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #64748b;">Additional Notes</label>
+                        <textarea name="notes" rows="2" placeholder="How are you feeling?" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button type="button" class="btn btn-outline" onclick="closeVitalsModal()" style="color: #64748b; border-color: #64748b;">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="padding-left: 2rem; padding-right: 2rem;">Record Vitals</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Upload Modal (Ported from Doctor Dashboard) -->
+<div id="upload-modal"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.9); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="glass-card"
+        style="width: 800px; padding: 0; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; border: 1px solid var(--glass-border);">
+        <div
+            style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05);">
+            <h2 style="margin: 0; font-size: 1.25rem; color: #fff;"><i class="fas fa-cloud-upload"
+                    style="color: var(--primary); margin-right: 0.75rem;"></i> Upload Medical Document</h2>
+            <button onclick="closeUploadModal()"
+                style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.25rem;"><i
+                    class="fas fa-times"></i></button>
+        </div>
+
+        <form id="upload-form" onsubmit="handleUpload(event)" enctype="multipart/form-data"
+            style="padding: 2rem; overflow-y: auto;">
+            <h4 style="margin: 0 0 1rem 0; color: #94a3b8;">0. Select Patient</h4>
+            <select name="patient_id" id="upload-patient-selector" class="medical-search-input"
+                style="padding-left: 1rem; margin-bottom: 1.5rem;">
+                <option value="">Myself</option>
+                <!-- Family members will be loaded here -->
+            </select>
+            <input type="hidden" id="selected-type" name="record_type" value="">
+
+            <h4 style="margin: 0 0 1rem 0; color: #fff;">1. Select Type</h4>
+            <div class="responsive-grid-3"
+                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                <div class="type-card" onclick="selectType(this, 'Prescription')">
+                    <i class="fas fa-prescription-bottle-medical" style="color: #818cf8;"></i>
+                    <span style="font-weight: 500; color: #fff;">Prescription</span>
+                </div>
+                <div class="type-card" onclick="selectType(this, 'Lab Report')">
+                    <i class="fas fa-flask" style="color: #34d399;"></i>
+                    <span style="font-weight: 500; color: #fff;">Lab Report</span>
+                </div>
+                <div class="type-card" onclick="selectType(this, 'Clinical Notes')">
+                    <i class="fas fa-notes-medical" style="color: #fbbf24;"></i>
+                    <span style="font-weight: 500; color: #fff;">Clinical Notes</span>
+                </div>
+                <div class="type-card" onclick="selectType(this, 'Discharge Summary')">
+                    <i class="fas fa-file-medical-alt" style="color: #a855f7;"></i>
+                    <span style="font-weight: 500; color: #fff;">Discharge Summary</span>
+                </div>
+                <div class="type-card" onclick="selectType(this, 'Imaging')">
+                    <i class="fas fa-x-ray" style="color: #ec4899;"></i>
+                    <span style="font-weight: 500; color: #fff;">Imaging/X-Ray</span>
+                </div>
+                <div class="type-card" onclick="selectType(this, 'Other')">
+                    <i class="fas fa-file-invoice" style="color: #94a3b8;"></i>
+                    <span style="font-weight: 500; color: #fff;">Other</span>
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 1rem 0; color: #94a3b8;">2. Upload File</h4>
+            <div class="upload-area" onclick="document.getElementById('file-input').click()" id="drop-zone">
+                <input type="file" id="file-input" name="document" accept="image/*,.pdf" style="display: none;"
+                    onchange="handleFileSelect(this)">
+                <div id="upload-placeholder">
+                    <i class="fas fa-cloud-upload-alt"
+                        style="font-size: 3rem; color: #64748b; margin-bottom: 1rem;"></i>
+                    <p style="margin: 0; font-size: 1.1rem; color: #fff;">Drag & drop or click to upload</p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #64748b;">Supports images (JPG,
+                        PNG) and
+                        PDF files</p>
+                    <button type="button" class="btn btn-primary" style="margin-top: 1.5rem;">Choose
+                        File</button>
+                </div>
+                <div id="file-preview" style="display: none; align-items: center; justify-content: center; gap: 1rem;">
+                    <i class="fas fa-check-circle" style="color: #34d399; font-size: 2rem;"></i>
+                    <div style="text-align: left;">
+                        <div id="filename" style="font-weight: 600; color: #fff;">filename.jpg</div>
+                        <div style="font-size: 0.8rem; color: #34d399;">Ready to upload</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="responsive-grid-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0;">
+                <div>
+                    <h4 style="margin: 0 0 0.75rem 0; color: #94a3b8;">3. Hospital Name</h4>
+                    <input type="text" name="hospital_name" placeholder="Name of hospital..." style="width: 100%;">
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 0.75rem 0; color: #94a3b8;">4. Treating Doctor</h4>
+                    <input type="text" name="treating_doctor_name" placeholder="Dr. Name..." style="width: 100%;">
+                </div>
+            </div>
+
+            <h4 style="margin: 0 0 1rem 0; color: #94a3b8;">5. Additional Notes (Optional)</h4>
+            <textarea name="doctor_notes" rows="3" placeholder="Add any details about this record..."
+                style="width: 100%;"></textarea>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="closeUploadModal()"
+                    style="border-color: #64748b; color: #94a3b8;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="padding-left: 2rem; padding-right: 2rem;">Digitize
+                    & Save Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Record Viewer Modal -->
+<div id="record-viewer-modal">
+    <div class="viewer-content">
+        <div class="viewer-image-container">
+            <button class="btn btn-outline viewer-back-btn" onclick="closeViewer()">
+                <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i> Back
+            </button>
+            <img id="viewer-img" src="" alt="Medical Record">
+        </div>
+        <div class="viewer-details">
+            <h2 id="viewer-title" style="margin-bottom: 0.5rem; color: #fff; font-family: 'Playfair Display', serif;">
+            </h2>
+            <div id="viewer-date" style="color: var(--accent); font-weight: 600; margin-bottom: 2rem;"></div>
+
+            <div style="margin-bottom: 2.5rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+                    <h4 style="color: #fff; margin: 0; font-size: 1.1rem; letter-spacing: 0.02em;">
+                        <i class="fas fa-sparkles" style="color: var(--primary); margin-right: 0.5rem;"></i> AI
+                        Medical
+                        Summarization
+                    </h4>
+                    <button id="summarize-btn" class="btn"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid var(--primary); color: #fff; background: rgba(230, 126, 80, 0.15); border-radius: 2rem; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+                        <i class="fas fa-arrows-rotate" style="margin-right: 0.4rem;"></i> Summarize Now
+                    </button>
+                </div>
+                <div id="viewer-summarization"
+                    style="color: #cbd5e1; line-height: 1.7; background: rgba(255, 255, 255, 0.05); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 1.25rem; font-style: italic; font-size: 0.95rem; backdrop-filter: blur(4px);">
+                </div>
+                <div id="viewer-key-points" class="tag-container" style="gap: 0.75rem;"></div>
+            </div>
+
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="color: #fff; margin-bottom: 1rem; font-size: 1rem;"><i class="fas fa-list-check"
+                        style="color: var(--secondary); margin-right: 0.5rem;"></i> Identified Symptoms</h4>
+                <div id="viewer-symptoms" class="tag-container"></div>
+            </div>
+
+            <div style="margin-bottom: 2.5rem;">
+                <h4 style="color: #fff; margin-bottom: 1rem; font-size: 1rem;"><i class="fas fa-pills"
+                        style="color: #34d399; margin-right: 0.5rem;"></i>
+                    Prescribed Medications</h4>
+                <div id="viewer-meds" class="tag-container"></div>
+            </div>
+
+            <div class="responsive-grid-2"
+                style="margin-bottom: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <h4
+                        style="color: rgba(255,255,255,0.6); margin-bottom: 0.5rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <i class="fas fa-hospital" style="color: var(--primary); margin-right: 0.4rem;"></i>
+                        Hospital
+                    </h4>
+                    <p id="viewer-hospital" style="color: #fff; font-size: 1rem; font-weight: 600; margin: 0;">
+                    </p>
+                </div>
+                <div>
+                    <h4
+                        style="color: rgba(255,255,255,0.6); margin-bottom: 0.5rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <i class="fas fa-user-md" style="color: var(--primary); margin-right: 0.4rem;"></i>
+                        Attending
+                        Doctor
+                    </h4>
+                    <p id="viewer-doctor" style="color: #fff; font-size: 1rem; font-weight: 600; margin: 0;">
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="color: #fff; margin-bottom: 1rem; font-size: 1rem;"><i class="fas fa-comment-dots"
+                        style="color: var(--accent); margin-right: 0.5rem;"></i> Doctor's Notes</h4>
+                <p id="viewer-notes"
+                    style="color: #cbd5e1; line-height: 1.6; background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08);">
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Family Member Modal -->
+<div id="family-modal" class="modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 2rem;">
+    <div class="glass-card"
+        style="width: 100%; max-width: 500px; padding: 2.5rem; background: #1e293b; border: 1px solid var(--glass-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 style="margin: 0; color: #fff; font-family: 'Playfair Display', serif;">Add Family Member</h2>
+            <button class="btn" onclick="closeAddFamilyModal()"
+                style="background: none; color: #94a3b8; font-size: 1.5rem;"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="family-form" onsubmit="submitFamilyMember(event)">
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; color: #94a3b8; margin-bottom: 0.5rem; font-size: 0.9rem;">Relationship</label>
+                <select id="family-relationship" required
+                    style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem; border-radius: 0.75rem;">
+                    <option value="">Select Connection...</option>
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Brother">Brother</option>
+                    <option value="Sister">Sister</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Child">Child</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; color: #94a3b8; margin-bottom: 0.5rem; font-size: 0.9rem;">Full
+                    Name</label>
+                <input type="text" id="family-name" required placeholder="Name as per documents..."
+                    style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem; border-radius: 0.75rem;">
+            </div>
+            <div class="responsive-grid-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label style="display: block; color: #94a3b8; margin-bottom: 0.5rem; font-size: 0.9rem;">Age</label>
+                    <input type="number" id="family-age" placeholder="Age"
+                        style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem; border-radius: 0.75rem;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; color: #94a3b8; margin-bottom: 0.5rem; font-size: 0.9rem;">Gender</label>
+                    <select id="family-gender"
+                        style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem; border-radius: 0.75rem;">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; color: #94a3b8; margin-bottom: 0.5rem; font-size: 0.9rem;">Contact
+                    (Optional)</label>
+                <input type="tel" id="family-contact" placeholder="Phone number..."
+                    style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem; border-radius: 0.75rem;">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="closeAddFamilyModal()"
+                    style="flex: 1; border-color: #64748b; color: #94a3b8;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Add Member</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<!-- Toast Notification Container -->
+<div id="toast-container"
+    style="position: fixed; top: 1rem; right: 1rem; z-index: 5000; display: flex; flex-direction: column; gap: 0.5rem;">
+</div>
+
+<!-- Socket.IO & Leaflet -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+
+<script>
+    // --- Toast Logic ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+
+        const isSuccess = type === 'success';
+        const bgColor = isSuccess ? 'rgba(6, 78, 59, 0.95)' : 'rgba(127, 29, 29, 0.95)';
+        const borderColor = isSuccess ? '#34d399' : '#f87171';
+        const iconClass = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const iconColor = isSuccess ? '#34d399' : '#f87171';
+
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas ${iconClass}" style="color: ${iconColor}; font-size: 1.25rem;"></i>
+                <span style="color: white; font-weight: 500; font-size: 0.95rem;">${message}</span>
+            </div>
+        `;
+
+        toast.style.cssText = `
+            background: ${bgColor};
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid ${borderColor};
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            min-width: 320px;
+            transform: translateX(120%);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            color: #fff;
+        `;
+
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            toast.style.transform = 'translateX(120%)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
+    }
+    let allRecords = [];
+
+    async function loadRecords() {
+        try {
+            const patientId = document.getElementById('profile-selector').value;
+            const url = patientId ? `/api/my_records?patient_id=${patientId}` : '/api/my_records';
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.error) {
+                document.getElementById('records-list').innerHTML = `<p style="color: #ef4444; text-align: center; padding: 2rem;">${data.error}</p>`;
+                return;
+            }
+
+            allRecords = data.records;
+            applyFilters();
+            updateDashboard(data);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function renderRecords(records, isSearching = false) {
+        const list = document.getElementById('records-list');
+        list.innerHTML = '';
+
+        if (records.length === 0) {
+            const message = isSearching
+                ? "No records found matching your search."
+                : "No records found in this category.";
+            list.innerHTML = `<div style="text-align: center; padding: 4rem; color: #64748b;"><i class="fas fa-search-minus" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i> ${message}</div>`;
+            return;
+        }
+
+        records.forEach(r => {
+            const structured = r.structured_data || {};
+            const typeClass = 'type-' + (r.record_type || 'other').toLowerCase().replace(' ', '-');
+            const icon = getIconForType(r.record_type);
+
+            const card = document.createElement('div');
+            card.className = 'record-card';
+            card.onclick = () => viewRecord(r);
+            card.innerHTML = `
+                <div class="status-badge">Completed</div>
+                <div class="record-icon ${typeClass}">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="record-details">
+                    <div class="record-title">${r.record_type} Report</div>
+                    <div class="record-meta">
+                        <span><i class="fas fa-calendar" style="margin-right: 0.4rem;"></i> ${r.visit_date}</span>
+                        <span><i class="fas fa-hospital" style="margin-right: 0.4rem;"></i> ${r.hospital_name || 'N/A'}</span>
+                    </div>
+                    <div class="tag-container">
+                        ${(structured.symptoms || []).slice(0, 3).map(s => `<span class="tag">${s}</span>`).join('')}
+                        ${(structured.medications || []).slice(0, 2).map(m => `<span class="tag" style="border-color: #34d39920; color: #34d399;">${m}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function getIconForType(type) {
+        switch (type) {
+            case 'Prescription': return 'fa-prescription-bottle-medical';
+            case 'Lab Report': return 'fa-flask';
+            case 'Clinical Notes': return 'fa-notes-medical';
+            case 'Imaging': return 'fa-x-ray';
+            default: return 'fa-file-medical';
+        }
+    }
+
+    function showTab(tab) {
+        document.getElementById('dashboard-tab').style.display = tab === 'dashboard' ? 'block' : 'none';
+        document.getElementById('records-tab').style.display = tab === 'records' ? 'block' : 'none';
+        document.getElementById('emergency-tab').style.display = tab === 'emergency' ? 'block' : 'none';
+        document.getElementById('family-tab').style.display = tab === 'family' ? 'block' : 'none';
+        document.getElementById('security-tab').style.display = tab === 'security' ? 'block' : 'none';
+        document.getElementById('schemes-tab').style.display = tab === 'schemes' ? 'block' : 'none';
+        document.getElementById('recommendations-tab').style.display = tab === 'recommendations' ? 'block' : 'none';
+        document.getElementById('symptom-checker-tab').style.display = tab === 'symptom-checker' ? 'block' : 'none';
+        document.getElementById('visualization-tab').style.display = tab === 'visualization' ? 'block' : 'none';
+        document.getElementById('skin-checker-tab').style.display = tab === 'skin-checker' ? 'block' : 'none';
+
+        if (tab === 'family') loadFamilyMembers();
+
+        if (tab === 'security') loadAuthorizedDoctors();
+        if (tab === 'schemes') {
+            loadSchemes();
+            loadHealthCardUI();
+        }
+        if (tab === 'recommendations') {
+            loadDoctorRecommendations();
+        }
+        if (tab === 'visualization') {
+            loadVitals();
+        }
+
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.remove('active');
+            const linkText = link.innerText.toLowerCase();
+
+            // Precise matching to avoid overlap between 'My Records' and 'Family Records'
+            if (tab === 'records' && linkText.includes('my records')) {
+                link.classList.add('active');
+            } else if (tab === 'family' && linkText.includes('family records')) {
+                link.classList.add('active');
+            } else if (tab === 'visualization' && linkText.includes('data visualization')) {
+                link.classList.add('active');
+            } else if (tab !== 'records' && tab !== 'family' && tab !== 'visualization' && linkText.includes(tab)) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    let currentCategory = 'All';
+
+    function updateCategory(type) {
+        currentCategory = type;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.includes(type));
+        });
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const queryField = document.getElementById('medical-record-search');
+        if (!queryField) return;
+
+        const query = queryField.value.toLowerCase();
+        let filtered = allRecords || [];
+
+        // Apply Category Filter
+        if (currentCategory !== 'All') {
+            filtered = filtered.filter(r => r.record_type === currentCategory);
+        }
+
+        // Apply Search Query
+        if (query) {
+            filtered = filtered.filter(r => {
+                const structured = r.structured_data || {};
+                const searchParts = [
+                    r.record_type || '',
+                    r.hospital_name || '',
+                    r.treating_doctor_name || '',
+                    r.doctor_notes || '',
+                    ...(structured.symptoms || []),
+                    ...(structured.medications || []),
+                    ...(structured.key_points || []),
+                    structured.summarization || ''
+                ];
+
+                const searchString = searchParts.join(' ').toLowerCase();
+                return searchString.includes(query);
+            });
+        }
+
+        renderRecords(filtered, !!query);
+    }
+
+    function viewRecord(record) {
+        // Normalize path for web URLs
+        let cleanPath = record.image.replace(/\\/g, '/');
+        if (!cleanPath.startsWith('/')) {
+            if (!cleanPath.startsWith('static/')) {
+                cleanPath = '/static/' + cleanPath;
+            } else {
+                cleanPath = '/' + cleanPath;
+            }
+        }
+        document.getElementById('viewer-img').src = cleanPath;
+        document.getElementById('viewer-title').innerText = record.record_type + ' Analysis';
+        document.getElementById('viewer-date').innerText = 'Visit Date: ' + record.visit_date;
+        document.getElementById('viewer-hospital').innerText = record.hospital_name || 'N/A';
+        document.getElementById('viewer-doctor').innerText = record.treating_doctor_name || 'N/A';
+        document.getElementById('viewer-notes').innerText = record.doctor_notes || 'No doctor notes available for this record.';
+
+        // AI Summarization & Key Points
+        const sumDiv = document.getElementById('viewer-summarization');
+        const keyDiv = document.getElementById('viewer-key-points');
+        const sumBtn = document.getElementById('summarize-btn');
+
+        const updateAIUI = (summarization, keyPoints) => {
+            sumDiv.innerText = summarization || "Medical summary not available for this record.";
+            keyDiv.innerHTML = '';
+            if (keyPoints && keyPoints.length > 0) {
+                keyPoints.forEach(point => {
+                    const span = document.createElement('span');
+                    span.className = 'tag';
+                    span.style.background = 'rgba(230, 126, 80, 0.1)';
+                    span.style.color = 'var(--primary)';
+                    span.style.borderColor = 'rgba(230, 126, 80, 0.2)';
+                    span.innerHTML = `<i class="fas fa-circle-info" style="margin-right: 0.5rem; font-size: 0.7rem;"></i> ${point}`;
+                    keyDiv.appendChild(span);
+                });
+            }
+        };
+
+        updateAIUI(record.structured_data.summarization || record.raw_ocr_text, record.structured_data.key_points);
+
+        sumBtn.onclick = async () => {
+            const originalText = sumBtn.innerHTML;
+            sumBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            sumBtn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/summarize_record/${record.id}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.summarization) {
+                    updateAIUI(data.summarization, data.key_points);
+                    document.getElementById('viewer-date').innerText = 'Visit Date: ' + data.visit_date;
+                    showToast("Record analyzed successfully!", "success");
+                    // Update local record
+                    record.structured_data.summarization = data.summarization;
+                    record.structured_data.key_points = data.key_points;
+                    record.visit_date = data.visit_date;
+                    // Refresh records list
+                    typeof loadRecords === 'function' && loadRecords();
+                } else {
+                    showToast(data.error || "Summarization failed", "error");
+                }
+            } catch (err) {
+                showToast("Connection error", "error");
+            } finally {
+                sumBtn.innerHTML = originalText;
+                sumBtn.disabled = false;
+            }
+        };
+
+        const symptoms = document.getElementById('viewer-symptoms');
+        symptoms.innerHTML = record.structured_data.symptoms.map(s => `<span class="tag" style="padding: 0.5rem 1rem;">${s}</span>`).join('') || '<span style="color: #64748b;">None identified</span>';
+
+        const meds = document.getElementById('viewer-meds');
+        meds.innerHTML = record.structured_data.medications.map(m => `<span class="tag" style="padding: 0.5rem 1rem; border-color: #34d39940; color: #34d399;">${m}</span>`).join('') || '<span style="color: #64748b;">None prescribed</span>';
+
+        document.getElementById('record-viewer-modal').style.display = 'block';
+    }
+
+    function closeViewer() {
+        document.getElementById('record-viewer-modal').style.display = 'none';
+    }
+
+    function updateDashboard(data) {
+        const recent = document.getElementById('recent-list');
+        if (data.records.length > 0) {
+            recent.innerHTML = data.records.slice(0, 3).map(r => `
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></div>
+                    <span>New ${r.record_type} digitized on ${r.visit_date}</span>
+                </div>
+            `).join('');
+        } else {
+            recent.innerHTML = '<p>No recent activity. Once a doctor uploads a record, it will appear here.</p>';
+        }
+    }
+
+    // --- Upload Modal Logic ---
+
+    function openUploadModal() {
+        document.getElementById('upload-modal').style.display = 'flex';
+        // Select first type by default
+        document.querySelector('.type-card').click();
+    }
+
+    function closeUploadModal() {
+        document.getElementById('upload-modal').style.display = 'none';
+        document.getElementById('upload-form').reset();
+        resetFileUpload();
+    }
+
+    function selectType(el, type) {
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('selected-type').value = type;
+    }
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('upload-placeholder').style.display = 'none';
+            document.getElementById('file-preview').style.display = 'flex';
+            document.getElementById('filename').innerText = input.files[0].name;
+            document.getElementById('drop-zone').classList.add('active');
+        }
+    }
+
+    function resetFileUpload() {
+        document.getElementById('upload-placeholder').style.display = 'block';
+        document.getElementById('file-preview').style.display = 'none';
+        document.getElementById('drop-zone').classList.remove('active');
+    }
+
+    document.getElementById('upload-form').onsubmit = async (e) => {
+        e.preventDefault();
+
+        if (!document.getElementById('selected-type').value) {
+            showToast("Please select a document type.", "error");
+            return;
+        }
+
+        const formData = new FormData(e.target);
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing AI Digitization...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/upload_record', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.message) {
+                closeUploadModal();
+                showToast("Record Digitized & Saved Successfully!", "success");
+                loadRecords(); // Refresh dashboard and timeline
+            } else {
+                showToast(data.error || "Upload failed", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Connection error: " + err.message, "error");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    };
+
+    // --- Emergency & Tracking Logic ---
+    const socket = io();
+    let trackingMap, userMarker, ambulanceMarker;
+
+    // Use the linked Patient ID, or User ID as fallback (User ID will likely fail if no patient record exists)
+    const patientId = parseInt("{{ patient.id if patient else current_user.id }}");
+    const userId = parseInt("{{ current_user.id }}");
+
+    function requestAmbulance() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const { latitude, longitude } = pos.coords;
+
+                // Switch UI
+                document.getElementById('request-view').style.display = 'none';
+                document.getElementById('tracking-view').style.display = 'block';
+                document.getElementById('tracking-map').style.display = 'block';
+                document.getElementById('time-requested').innerText = new Date().toLocaleTimeString();
+
+                // Initialize Map
+                if (!trackingMap) {
+                    trackingMap = L.map('tracking-map').setView([latitude, longitude], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(trackingMap);
+                    userMarker = L.marker([latitude, longitude]).addTo(trackingMap).bindPopup('Your Location').openPopup();
+                }
+
+                // Emit request
+                socket.emit('request_ambulance', {
+                    patient_id: patientId,
+                    lat: latitude,
+                    lng: longitude,
+                    user_id: userId
+                });
+
+                showToast("Emergency request sent!", "success");
+            }, (err) => {
+                showToast("Geolocation failed. Please enable location services.", "error");
+            });
+        }
+    }
+
+    socket.on('emergency_accepted', (data) => {
+        // Update Timeline
+        document.getElementById('step-accepted').classList.add('active');
+        document.getElementById('driver-info').innerText = `Driver #${data.driver_id} is on the way`;
+        document.getElementById('status-alert').style.display = 'block';
+
+        showToast("Ambulance request accepted!", "success");
+    });
+
+    socket.on('ambulance_location_updated', (data) => {
+        if (!ambulanceMarker) {
+            ambulanceMarker = L.marker([data.lat, data.lng], {
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png', // Ambulance icon
+                    iconSize: [32, 32]
+                })
+            }).addTo(trackingMap).bindPopup('Ambulance');
+            document.getElementById('step-onway').classList.add('active');
+        } else {
+            ambulanceMarker.setLatLng([data.lat, data.lng]);
+        }
+
+        const dist = trackingMap.distance(userMarker.getLatLng(), ambulanceMarker.getLatLng());
+        if (dist < 100) {
+            document.getElementById('step-arrived').classList.add('active');
+            document.getElementById('status-alert').innerHTML = "<strong>Arrived!</strong> The ambulance is at your location.";
+        }
+    });
+
+    // --- Govt Schemes Logic ---
+    async function loadSchemes() {
+        const container = document.getElementById('schemes-container');
+        const loading = document.getElementById('schemes-loading');
+
+        container.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+            const res = await fetch('/api/suggest_schemes');
+            const data = await res.json();
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+
+            if (data.error) {
+                container.innerHTML = `<div style="grid-column: 1/-1; color: #ef4444; text-align: center; padding: 2rem;">${data.error}</div>`;
+                return;
+            }
+
+            if (data.message && (!data.schemes || data.schemes.length === 0)) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: #475569; font-weight: 500;">${data.message}</div>`;
+                return;
+            }
+
+            container.innerHTML = data.schemes.map(s => `
+                <div class="glass-card" style="display: flex; flex-direction: column; height: 100%; border: 1px solid rgba(0,0,0,0.1); background: #fff; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                        <div style="display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1rem;">
+                            <div style="width: 48px; height: 48px; background: rgba(79, 70, 229, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #4f46e5; flex-shrink: 0;">
+                                <i class="fas fa-award" style="font-size: 1.25rem;"></i>
+                            </div>
+                            <h3 style="margin: 0; font-size: 1.15rem; color: #1e293b; line-height: 1.4; font-weight: 800;">${s.title}</h3>
+                        </div>
+                        <div style="background: rgba(34, 197, 94, 0.15); color: #15803d; font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                            <i class="fas fa-check-circle"></i> AI Recommendation: High Match
+                        </div>
+                    </div>
+                    <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; font-weight: 800;">Relevance</h4>
+                            <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; font-weight: 600;">${s.relevance}</p>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; font-weight: 800;">Benefits</h4>
+                            <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; font-weight: 600;">${s.benefits}</p>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; font-weight: 800;">How to Apply</h4>
+                            <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; font-weight: 600;">${s.how_to_apply}</p>
+                        </div>
+                    </div>
+                    <div style="padding: 1rem 1.5rem; border-top: 1px solid rgba(0,0,0,0.05);">
+                        <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-weight: 700;" onclick="window.open('${s.portal_url || '#'}', '_blank'); showToast('Redirecting to ${s.title} official portal...', 'success')">Access Scheme Portal</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+            container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #ef4444; font-weight: 600;">Connection Error</div>`;
+        }
+    }
+
+    // --- Doctor Recommendation Logic ---
+    async function loadDoctorRecommendations() {
+        const container = document.getElementById('recs-container');
+        const loading = document.getElementById('recs-loading');
+
+        container.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+            const res = await fetch('/api/suggest_doctors');
+            const data = await res.json();
+
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+
+            if (data.error) {
+                container.innerHTML = `<div style="grid-column: 1/-1; color: #ef4444; text-align: center; padding: 2rem;">${data.error}</div>`;
+                return;
+            }
+
+            if (data.message || !data.recommendations || data.recommendations.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: #475569; font-weight: 500;">${data.message || "No doctors found matching your profile yet."}</div>`;
+                return;
+            }
+
+            container.innerHTML = data.recommendations.map(r => `
+                <div class="glass-card" style="display: flex; flex-direction: column; height: 100%; border: 1px solid rgba(79, 70, 229, 0.15); background: #fff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05); background: rgba(79, 70, 229, 0.02);">
+                        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                            <div style="width: 50px; height: 50px; background: rgba(79, 70, 229, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #4f46e5; border: 2px solid #4f46e5;">
+                                <i class="fas fa-user-md" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.25rem; color: #1e293b; font-weight: 800;">${r.doctor_name}</h3>
+                                <div style="color: #4f46e5; font-size: 0.85rem; font-weight: 700; text-transform: uppercase;">${r.specialty}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                                <div style="width: ${r.match_score}%; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4);"></div>
+                            </div>
+                            <span style="font-size: 0.85rem; font-weight: 800; color: #4f46e5;">${r.match_score}% Match</span>
+                        </div>
+                    </div>
+                    <div style="padding: 1.5rem; flex: 1;">
+                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.8rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; font-weight: 800;">Why this choice?</h4>
+                        <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; font-weight: 500;">${r.recommendation_reason}</p>
+                    </div>
+                    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid rgba(0,0,0,0.05); background: #f8fafc;">
+                        <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-weight: 700;" onclick="showTab('security'); showToast('Search for ${r.doctor_name} to grant access', 'success')">Connect with Specialist</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+            container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #ef4444; font-weight: 600;">System Error: Matchmaking failed</div>`;
+        }
+    }
+
+    // --- Doctor Access Logic ---
+    async function doDoctorSearch(query) {
+        const resultsDiv = document.getElementById('search-results');
+        if (query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/search_doctors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+            const doctors = await res.json();
+
+            if (doctors.length === 0) {
+                resultsDiv.innerHTML = '<div style="padding: 1rem; color: #64748b; text-align: center;">No doctors found</div>';
+            } else {
+                resultsDiv.innerHTML = doctors.map(d => `
+                    <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                        <div>
+                            <div style="font-weight: 600; color: #fff;">${d.name}</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">ID: ${d.id} • ${d.specialty}</div>
+                        </div>
+                        <button class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem;" onclick="grantAccess(${d.id}, '${d.name}')">Grant Access</button>
+                    </div>
+                `).join('');
+            }
+            resultsDiv.style.display = 'block';
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function grantAccess(doctorId, doctorName) {
+        try {
+            const res = await fetch('/api/grant_access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doctor_id: doctorId })
+            });
+            const data = await res.json();
+            if (data.message) {
+                showToast(`Access granted to ${doctorName}`, "success");
+                document.getElementById('search-results').style.display = 'none';
+                document.getElementById('doctor-search').value = '';
+                loadAuthorizedDoctors();
+            } else {
+                showToast(data.error || "Failed to grant access", "error");
+            }
+        } catch (e) {
+            showToast("Connection error", "error");
+        }
+    }
+
+    async function revokeAccess(doctorId, doctorName) {
+        if (!confirm(`Are you sure you want to revoke access from ${doctorName}?`)) return;
+
+        try {
+            const res = await fetch('/api/revoke_access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doctor_id: doctorId })
+            });
+            const data = await res.json();
+            if (data.message) {
+                showToast(`Access revoked from ${doctorName}`, "success");
+                loadAuthorizedDoctors();
+            }
+        } catch (e) {
+            showToast("Connection error", "error");
+        }
+    }
+
+    async function loadAuthorizedDoctors() {
+        try {
+            const res = await fetch('/api/authorized_doctors');
+            const doctors = await res.json();
+            const list = document.getElementById('authorized-doctors-list');
+
+            if (doctors.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; background: var(--cream); border-radius: 1rem; border: 1px dashed var(--border);">
+                        <i class="fas fa-user-shield" style="font-size: 2.5rem; color: var(--primary); opacity: 0.2; margin-bottom: 1rem; display: block;"></i>
+                        <p style="color: var(--text-dark); font-weight: 500; margin: 0;">No doctors currently have access to your records.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = doctors.map(d => `
+                <div class="glass-card" style="margin-bottom: 1rem; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; background: var(--white); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 45px; height: 45px; background: rgba(230, 126, 80, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: var(--dark); font-size: 1.05rem;">${d.name}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-dark); font-weight: 600;">Access granted on <span style="color: var(--primary);">${d.granted_at}</span></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 0.5rem 1.25rem; font-size: 0.85rem; font-weight: 600; border-radius: 0.75rem;" onclick="revokeAccess(${d.id}, '${d.name}')">
+                        <i class="fas fa-user-minus" style="margin-right: 0.4rem;"></i> Revoke
+                    </button>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function saveHealthCard() {
+        const cardType = document.getElementById('card-type').value;
+        const cardNumber = document.getElementById('card-number').value;
+
+        if (!cardType || !cardNumber) {
+            showToast("Please enter both card type and number.", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/update_health_card', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ card_type: cardType, card_number: cardNumber })
+            });
+            const data = await res.json();
+            if (data.message) {
+                showToast(data.message, "success");
+                loadSchemes(); // Refresh schemes with new card data
+            }
+        } catch (e) {
+            showToast("Failed to save card info", "error");
+        }
+    }
+
+    function loadHealthCardUI() {
+        const cardType = "{{ patient.health_card_type if patient else '' }}";
+        const cardNumber = "{{ patient.health_card_number if patient else '' }}";
+
+        if (cardType) document.getElementById('card-type').value = cardType;
+        if (cardNumber) document.getElementById('card-number').value = cardNumber;
+    }
+
+    // --- Family Records Logic ---
+    function openAddFamilyModal() {
+        document.getElementById('family-modal').style.display = 'flex';
+    }
+
+    function closeAddFamilyModal() {
+        document.getElementById('family-modal').style.display = 'none';
+    }
+
+    async function submitFamilyMember(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('family-name').value,
+            relationship: document.getElementById('family-relationship').value,
+            age: document.getElementById('family-age').value,
+            gender: document.getElementById('family-gender').value,
+            contact: document.getElementById('family-contact').value
+        };
+
+        try {
+            const res = await fetch('/api/add_family_member', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.message) {
+                showToast(data.message, "success");
+                closeAddFamilyModal();
+                loadFamilyMembers();
+                document.getElementById('family-form').reset();
+            } else {
+                showToast(data.error || "Failed to add member", "error");
+            }
+        } catch (e) {
+            showToast("Connection error", "error");
+        }
+    }
+
+    async function loadFamilyMembers() {
+        try {
+            const res = await fetch('/api/list_family');
+            const members = await res.json();
+
+            // Update Selectors
+            const profileSelector = document.getElementById('profile-selector');
+            const uploadSelector = document.getElementById('upload-patient-selector');
+
+            const currentValue = profileSelector.value;
+            const currentUpload = uploadSelector.value;
+
+            const familyTabsHtml = members.filter(m => m.relationship !== 'Self').map(m => `
+                <option value="${m.id}">${m.relationship}: ${m.name}</option>
+            `).join('');
+
+            profileSelector.innerHTML = '<option value="">My Own Records</option>' + familyTabsHtml;
+            uploadSelector.innerHTML = '<option value="">Myself</option>' + familyTabsHtml;
+
+            profileSelector.value = currentValue;
+            uploadSelector.value = currentUpload;
+
+            // Update List View in Family Tab
+            const list = document.getElementById('family-list');
+            if (members.length <= 1) { // Only 'Self'
+                list.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem; background: rgba(255,255,255,0.02); border-radius: 1.5rem; border: 1px dashed rgba(255,255,255,0.1);">
+                        <i class="fas fa-users-slash" style="font-size: 3rem; color: #334155; margin-bottom: 1.5rem; display: block;"></i>
+                        <h3 style="color: #64748b; margin-bottom: 0.5rem;">No family profiles yet</h3>
+                        <p style="color: #475569;">Add your parents or other family members to manage their records.</p>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = members.filter(m => m.relationship !== 'Self').map(m => `
+                    <div class="glass-card" style="padding: 1.5rem; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--glass-border); transition: transform 0.3s; cursor: pointer;" onclick="document.getElementById('profile-selector').value = '${m.id}'; showTab('records'); loadRecords()">
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <div style="width: 50px; height: 50px; background: rgba(230, 126, 80, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                                <i class="fas ${m.gender === 'Female' ? 'fa-person-dress' : 'fa-person'}"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                    <h4 style="margin: 0; color: #fff;">${m.name}</h4>
+                                    <span style="font-size: 0.7rem; padding: 0.2rem 0.6rem; background: rgba(125, 211, 192, 0.1); color: var(--accent); border-radius: 2rem; font-weight: 600; text-transform: uppercase;">${m.relationship}</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">
+                                    ${m.age} Years • ${m.gender}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--primary); font-weight: 600;">
+                                    View Medical History <i class="fas fa-arrow-right" style="font-size: 0.7rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+        } catch (e) {
+            console.error("Family list load error:", e);
+        }
+    }
+
+    // Initial load for selectors
+    loadFamilyMembers();
+
+    loadRecords();
+
+    // --- Symptom Checker Logic ---
+    let selectedSymptoms = [];
+
+    function toggleSymptom(element, symptom) {
+        if (selectedSymptoms.includes(symptom)) {
+            selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+            element.classList.remove('selected');
+            // Remove from custom container if it was mirrored there
+            const customChips = document.getElementById('custom-symptoms-container').querySelectorAll('.symptom-chip');
+            customChips.forEach(chip => {
+                if (chip.dataset.symptom === symptom) chip.remove();
+            });
+        } else {
+            selectedSymptoms.push(symptom);
+            element.classList.add('selected');
+        }
+    }
+
+    function filterSymptoms() {
+        const query = document.getElementById('custom-symptom-input').value.toLowerCase();
+        const chips = document.querySelectorAll('#symptom-list .symptom-chip');
+        
+        chips.forEach(chip => {
+            const text = chip.innerText.toLowerCase();
+            if (text.includes(query)) {
+                chip.style.display = 'block';
+            } else {
+                chip.style.display = 'none';
+            }
+        });
+    }
+
+    function addCustomSymptom() {
+        const input = document.getElementById('custom-symptom-input');
+        const symptom = input.value.trim();
+        if (symptom) {
+            if (!selectedSymptoms.includes(symptom)) {
+                selectedSymptoms.push(symptom);
+                renderCustomSymptom(symptom);
+                
+                // If it matches a predefined chip, highlight it
+                document.querySelectorAll('#symptom-list .symptom-chip').forEach(el => {
+                    if (el.innerText.trim().toLowerCase() === symptom.toLowerCase()) el.classList.add('selected');
+                });
+            }
+            input.value = '';
+            filterSymptoms(); // Reset filter
+        }
+    }
+
+    function renderCustomSymptom(symptom) {
+        const container = document.getElementById('custom-symptoms-container');
+        const chip = document.createElement('div');
+        chip.className = 'symptom-chip selected';
+        chip.dataset.symptom = symptom;
+        chip.style.display = 'inline-flex';
+        chip.style.alignItems = 'center';
+        chip.style.gap = '0.5rem';
+        chip.innerHTML = `${symptom} <i class="fas fa-times-circle" style="cursor: pointer; opacity: 0.8;" onclick="removeSymptom('${symptom.replace(/'/g, "\\'")}', this.parentElement)"></i>`;
+        container.appendChild(chip);
+    }
+
+    function removeSymptom(symptom, element) {
+        selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+        element.remove();
+        // Also unselect predefined chip
+        document.querySelectorAll('#symptom-list .symptom-chip').forEach(el => {
+            if (el.innerText.trim().toLowerCase() === symptom.toLowerCase()) el.classList.remove('selected');
+        });
+    }
+
+    async function analyzeSymptoms() {
+        if (selectedSymptoms.length === 0) {
+            showToast("Please select at least one symptom.", "error");
+            return;
+        }
+
+        const resultsDiv = document.getElementById('symptom-results');
+        const loadingDiv = document.getElementById('symptom-loading');
+        
+        resultsDiv.style.display = 'none';
+        loadingDiv.style.display = 'block';
+
+        try {
+            const res = await fetch('/api/symptom_checker', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symptoms: selectedSymptoms })
+            });
+            const data = await res.json();
+
+            loadingDiv.style.display = 'none';
+
+            if (data.error) {
+                showToast(data.error, "error");
+                return;
+            }
+
+            // Populate results
+            const conditionsContainer = document.getElementById('possible-conditions');
+            conditionsContainer.innerHTML = data.possible_conditions.map(c => 
+                `<span class="tag" style="background: rgba(230, 126, 80, 0.1); color: var(--primary); border-color: var(--primary); padding: 0.5rem 1rem; font-size: 0.9rem;">${c}</span>`
+            ).join('');
+
+            const guidanceContainer = document.getElementById('health-guidance');
+            guidanceContainer.innerHTML = data.health_guidance.map(g => `<li>${g}</li>`).join('');
+
+            document.getElementById('medical-disclaimer').innerText = data.disclaimer;
+
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (e) {
+            loadingDiv.style.display = 'none';
+            showToast("Failed to analyze symptoms. Please try again.", "error");
+        }
+    }
+
+    // --- Vitals Visualization Logic ---
+    let vitalsCharts = {};
+
+    function openVitalsModal() {
+        document.getElementById('vitals-modal').style.display = 'flex';
+    }
+
+    function closeVitalsModal() {
+        document.getElementById('vitals-modal').style.display = 'none';
+        document.getElementById('vitals-form').reset();
+    }
+
+    async function handleVitalsSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        const selector = document.getElementById('profile-selector');
+        const patientId = selector ? selector.value : '';
+        if (patientId) data.patient_id = patientId;
+
+        try {
+            const res = await fetch('/api/save_vitals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.message) {
+                showToast(result.message, "success");
+                closeVitalsModal();
+                loadVitals();
+            } else {
+                showToast(result.error || "Failed to save vitals", "error");
+            }
+        } catch (err) {
+            showToast("Connection error", "error");
+        }
+    }
+
+    async function loadVitals() {
+        const selector = document.getElementById('profile-selector');
+        const patientId = selector ? selector.value : '';
+        const url = patientId ? `/api/get_vitals?patient_id=${patientId}` : '/api/get_vitals';
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.vitals) {
+                renderVitalsCharts(data.vitals);
+                renderVitalsTable(data.vitals);
+            }
+        } catch (err) {
+            console.error("Failed to load vitals:", err);
+        }
+    }
+
+    function renderVitalsCharts(data) {
+        if (!window.Chart || !data || data.length === 0) return;
+        const labels = data.map(v => v.recorded_at);
+        
+        const chartConfigs = {
+            heartRateChart: { label: 'Heart Rate', data: data.map(v => Number(v.heart_rate)), color: '#ef4444' },
+            bpChart: {
+                datasets: [
+                    { label: 'Systolic', data: data.map(v => Number(v.blood_pressure_sys)), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 },
+                    { label: 'Diastolic', data: data.map(v => Number(v.blood_pressure_dia)), borderColor: '#60a5fa', backgroundColor: 'rgba(96, 165, 250, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            tempChart: { label: 'Temperature', data: data.map(v => Number(v.temperature)), color: '#f59e0b' },
+            spo2Chart: { label: 'SpO2', data: data.map(v => Number(v.spo2)), color: '#06b6d4' }
+        };
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 10, right: 10, bottom: 0, left: 0 } },
+            plugins: { 
+                legend: { 
+                    display: false,
+                    position: 'top',
+                    labels: { color: '#64748b', font: { size: 11 } }
+                }
+            },
+            elements: {
+                point: { radius: 3, hoverRadius: 5 },
+                line: { borderWidth: 2.5 }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: false, 
+                    grid: { color: '#f1f5f9' },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 0 }
+                }
+            }
+        };
+
+        Object.entries(chartConfigs).forEach(([id, config]) => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            if (vitalsCharts[id]) vitalsCharts[id].destroy();
+            const ctx = canvas.getContext('2d');
+            
+            const datasets = config.datasets || [{
+                label: config.label, 
+                data: config.data, 
+                borderColor: config.color,
+                backgroundColor: config.color + '20', 
+                fill: true, 
+                tension: 0.4
+            }];
+
+            const options = JSON.parse(JSON.stringify(chartOptions));
+            if (id === 'bpChart') options.plugins.legend.display = true;
+
+            vitalsCharts[id] = new Chart(ctx, {
+                type: 'line', 
+                data: { labels, datasets },
+                options: options
+            });
+        });
+    }
+
+    function renderVitalsTable(data) {
+        const body = document.getElementById('vitals-log-body');
+        if (!body) return;
+        body.innerHTML = [...data].reverse().map(v => {
+            const analysis = getVitalsAnalysis(v);
+            return `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 1rem; font-weight: 500;">${v.recorded_at}</td>
+                    <td style="padding: 1rem;"><span style="color: ${analysis.hr.color}">${v.heart_rate} bpm</span> ${analysis.hr.icon}</td>
+                    <td style="padding: 1rem;"><span style="color: ${analysis.bp.color}">${v.blood_pressure_sys}/${v.blood_pressure_dia}</span> ${analysis.bp.icon}</td>
+                    <td style="padding: 1rem;"><span style="color: ${analysis.temp.color}">${v.temperature}°C</span> ${analysis.temp.icon}</td>
+                    <td style="padding: 1rem;"><span style="color: ${analysis.spo2.color}">${v.spo2}%</span> ${analysis.spo2.icon}</td>
+                    <td style="padding: 1rem; font-size: 0.85rem; color: #475569;">${analysis.summary}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    function getVitalsAnalysis(v) {
+        let res = { hr: { color: '#1e293b', icon: '' }, bp: { color: '#1e293b', icon: '' }, temp: { color: '#1e293b', icon: '' }, spo2: { color: '#1e293b', icon: '' }, summary: "Normal range." };
+        if (v.blood_pressure_sys >= 140 || v.blood_pressure_dia >= 90) { res.bp = { color: '#ef4444', icon: '<i class="fas fa-arrow-trend-up" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>' }; res.summary = "High Blood Pressure detected."; }
+        if (v.heart_rate > 100) { res.hr = { color: '#ef4444', icon: '<i class="fas fa-bolt" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>' }; res.summary = res.summary === "Normal range." ? "Elevated heart rate." : res.summary + " Elevated heart rate."; }
+        if (v.temperature > 37.5) { res.temp = { color: '#ef4444', icon: '<i class="fas fa-fire" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>' }; res.summary = res.summary === "Normal range." ? "Fever detected." : res.summary + " Fever detected."; }
+        if (v.spo2 < 95) { res.spo2 = { color: '#ef4444', icon: '<i class="fas fa-mask-face" style="font-size: 0.7rem; margin-left: 0.2rem;"></i>' }; res.summary = res.summary === "Normal range." ? "Low oxygen levels." : res.summary + " Low oxygen levels."; }
+        return res;
+    }
+
+    // --- Skin Checker Logic ---
+    let skinImageFile = null;
+    let skinStream = null;
+
+    async function startSkinScan() {
+        const video = document.getElementById('skin-video');
+        const container = document.getElementById('skin-camera-container');
+        const uploadArea = document.getElementById('skin-upload-area');
+        
+        try {
+            skinStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' }, 
+                audio: false 
+            });
+            video.srcObject = skinStream;
+            uploadArea.style.display = 'none';
+            container.style.display = 'block';
+            
+            // Re-render UI state
+            document.getElementById('skin-preview-container').style.display = 'none';
+            document.getElementById('analyze-skin-btn').style.display = 'none';
+            document.getElementById('skin-initial-state').style.display = 'block';
+            document.getElementById('skin-analysis-results').style.display = 'none';
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            showToast("Could not access camera. Please check permissions.", "error");
+        }
+    }
+
+    function stopSkinScan() {
+        if (skinStream) {
+            skinStream.getTracks().forEach(track => track.stop());
+            skinStream = null;
+        }
+        document.getElementById('skin-video').srcObject = null;
+        document.getElementById('skin-camera-container').style.display = 'none';
+        
+        if (!skinImageFile) {
+            document.getElementById('skin-upload-area').style.display = 'flex';
+        }
+    }
+
+    function captureSkinScan() {
+        const video = document.getElementById('skin-video');
+        const canvas = document.getElementById('skin-capture-canvas');
+        const context = canvas.getContext('2d');
+        
+        // Match canvas size to video feed
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw current frame
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "skin_scan.jpg", { type: "image/jpeg" });
+            skinImageFile = file;
+            
+            // Show preview
+            document.getElementById('skin-preview').src = URL.createObjectURL(blob);
+            document.getElementById('skin-preview-container').style.display = 'block';
+            document.getElementById('analyze-skin-btn').style.display = 'block';
+            document.getElementById('skin-camera-container').style.display = 'none';
+            
+            stopSkinScan();
+        }, 'image/jpeg', 0.9);
+    }
+
+    function previewSkinImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            skinImageFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('skin-upload-area').style.display = 'none';
+                document.getElementById('skin-preview-container').style.display = 'block';
+                document.getElementById('skin-preview').src = e.target.result;
+                document.getElementById('analyze-skin-btn').style.display = 'block';
+                
+                // Reset results area
+                document.getElementById('skin-initial-state').style.display = 'block';
+                document.getElementById('skin-analysis-results').style.display = 'none';
+                document.getElementById('skin-loading').style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function resetSkinUpload() {
+        stopSkinScan();
+        skinImageFile = null;
+        document.getElementById('skin-image-input').value = '';
+        document.getElementById('skin-upload-area').style.display = 'flex';
+        document.getElementById('skin-preview-container').style.display = 'none';
+        document.getElementById('skin-camera-container').style.display = 'none';
+        document.getElementById('skin-preview').src = '';
+        document.getElementById('analyze-skin-btn').style.display = 'none';
+        
+        document.getElementById('skin-initial-state').style.display = 'block';
+        document.getElementById('skin-analysis-results').style.display = 'none';
+        document.getElementById('skin-loading').style.display = 'none';
+    }
+
+    async function analyzeSkin() {
+        if (!skinImageFile) return;
+        
+        document.getElementById('skin-initial-state').style.display = 'none';
+        document.getElementById('skin-analysis-results').style.display = 'none';
+        document.getElementById('skin-loading').style.display = 'block';
+        document.getElementById('analyze-skin-btn').disabled = true;
+        document.getElementById('analyze-skin-btn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyzing...';
+
+        const formData = new FormData();
+        formData.append('image', skinImageFile);
+
+        try {
+            const res = await fetch('/api/analyze_skin', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            
+            document.getElementById('skin-loading').style.display = 'none';
+            
+            if (data.error && !data.condition) {
+                showToast(data.error, "error");
+                document.getElementById('skin-initial-state').style.display = 'block';
+            } else {
+                document.getElementById('skin-condition-name').textContent = data.condition;
+                
+                const confTag = document.getElementById('skin-confidence');
+                confTag.textContent = data.confidence;
+                if (data.confidence.toLowerCase().includes('high')) {
+                    confTag.style.background = 'rgba(34, 197, 94, 0.1)';
+                    confTag.style.color = '#22c55e';
+                } else if (data.confidence.toLowerCase().includes('low')) {
+                    confTag.style.background = 'rgba(239, 68, 68, 0.1)';
+                    confTag.style.color = '#ef4444';
+                } else {
+                    confTag.style.background = 'rgba(245, 158, 11, 0.1)';
+                    confTag.style.color = '#f59e0b';
+                }
+
+                document.getElementById('skin-guidance').textContent = data.guidance;
+                document.getElementById('skin-disclaimer').textContent = data.disclaimer;
+                
+                document.getElementById('skin-analysis-results').style.display = 'block';
+            }
+        } catch (e) {
+            document.getElementById('skin-loading').style.display = 'none';
+            document.getElementById('skin-initial-state').style.display = 'block';
+            showToast("Failed to connect to AI engine.", "error");
+        } finally {
+            document.getElementById('analyze-skin-btn').disabled = false;
+            document.getElementById('analyze-skin-btn').innerHTML = '<i class="fas fa-brain mr-2"></i> Analyze Image';
+        }
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

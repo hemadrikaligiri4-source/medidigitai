@@ -1,0 +1,38 @@
+--- All Users ---
+ID: 1, Username: dr_test, Role: Doctor, Email: None
+ID: 2, Username: john_p, Role: Patient, Email: None
+ID: 3, Username: dr_verifier, Role: Doctor, Email: None
+ID: 4, Username: pat_verifier, Role: Patient, Email: None
+ID: 5, Username: tharun, Role: Doctor, Email: None
+ID: 6, Username: hemadri, Role: Patient, Email: kaligirihemadri@gmail.com
+ID: 7, Username: rupesh, Role: HCW, Email: None
+ID: 8, Username: subbu, Role: Driver, Email: None
+ID: 9, Username: test_doc_new, Role: Doctor, Email: test_doc_new@example.com
+ID: 10, Username: tharun1, Role: Patient, Email: hsvuuef@gmail.com
+ID: 11, Username: test_driver, Role: Driver, Email: driver@test.com
+ID: 12, Username: test_patient, Role: Patient, Email: patient@test.com
+ID: 13, Username: dr_heart, Role: Doctor, Email: sarah.chen@meddigit.ai
+ID: 14, Username: dr_brain, Role: Doctor, Email: m.ross@meddigit.ai
+ID: 15, Username: dr_skin, Role: Doctor, Email: elena.r@meddigit.ai
+ID: 16, Username: dr_ortho, Role: Doctor, Email: j.wilson@meddigit.ai
+ID: 17, Username: kushvanth, Role: Doctor, Email: dasarikushvanth@gmail.com
+ID: 18, Username: kavya, Role: HCW, Email: tkavyak7@gmail.com
+ID: 19, Username: hemadri123, Role: HCW, Email: 1234hemadri@gmail.com
+
+--- All Patients ---
+ID: 1, Name: John Patient, UserID: 2
+ID: 2, Name: Patient Verifier, UserID: 4
+ID: 3, Name: hemadri, UserID: 6
+ID: 4, Name: rajtharun, UserID: 10
+ID: 5, Name: Test Patient, UserID: 12
+
+--- All Medical Records ---
+ID: 1, PatientID: 1, Doctor: None
+ID: 2, PatientID: 1, Doctor: None
+ID: 3, PatientID: 1, Doctor: Reynaldo O. Joson, M.D.
+ID: 4, PatientID: 2, Doctor: None
+ID: 5, PatientID: 3, Doctor: Dr. Anna Singh, MD
+ID: 6, PatientID: 3, Doctor: Reynaldo O. Jason, M.D.
+ID: 7, PatientID: 3, Doctor: Reynaldo O. Joson, M.D.
+ID: 8, PatientID: 3, Doctor: raj
+ID: 9, PatientID: 3, Doctor: Dr. Emily Carter, MD

@@ -1,0 +1,44 @@
+{
+    "sk-or-v1-6...": {
+        "chatbot": {
+            "arcee-ai/trinity-large-preview:free": 200,
+            "qwen/qwen3-4b:free": 429,
+            "google/gemma-3-27b-it:free": 200,
+            "meta-llama/llama-3.1-8b-instruct:free": 404,
+            "google/gemini-2.0-flash-lite-preview-02-05:free": 400
+        },
+        "vision": {
+            "qwen/qwen-2.5-vl-7b-instruct:free": 404,
+            "nvidia/nemotron-nano-12b-v2-vl:free": 200,
+            "google/gemini-2.0-flash-lite-preview-02-05:free": 400
+        }
+    },
+    "sk-or-v1-8...": {
+        "chatbot": {
+            "arcee-ai/trinity-large-preview:free": 200,
+            "qwen/qwen3-4b:free": 429,
+            "google/gemma-3-27b-it:free": 200,
+            "meta-llama/llama-3.1-8b-instruct:free": 404,
+            "google/gemini-2.0-flash-lite-preview-02-05:free": 400
+        },
+        "vision": {
+            "qwen/qwen-2.5-vl-7b-instruct:free": 404,
+            "nvidia/nemotron-nano-12b-v2-vl:free": 200,
+            "google/gemini-2.0-flash-lite-preview-02-05:free": 400
+        }
+    },
+    "sk-or-v1-c...": {
+        "chatbot": {
+            "arcee-ai/trinity-large-preview:free": 200,
+            "qwen/qwen3-4b:free": 429,
+            "google/gemma-3-27b-it:free": 200,
+            "meta-llama/llama-3.1-8b-instruct:free": 404,
+            "google/gemini-2.0-flash-lite-preview-02-05:free": 400
+        },
+        "vision": {
+            "qwen/qwen-2.5-vl-7b-instruct:free": 404,
+            "nvidia/nemotron-nano-12b-v2-vl:free": 200,
+            "google/gemini-2.0-flash-lite-preview-02-05:free": 400
+        }
+    }
+}

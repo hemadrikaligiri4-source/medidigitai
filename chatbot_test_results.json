@@ -1,0 +1,52 @@
+[
+    {
+        "model": "deepseek/deepseek-chat:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for deepseek/deepseek-chat:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for meta-llama/llama-3.1-8b-instruct:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "meta-llama/llama-3-8b-instruct:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for meta-llama/llama-3-8b-instruct:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "mistralai/mistral-7b-instruct:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for mistralai/mistral-7b-instruct:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "qwen/qwen-2.5-7b-instruct:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for qwen/qwen-2.5-7b-instruct:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "openchat/openchat-7b:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for openchat/openchat-7b:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "gryphe/mythomist-7b:free",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for gryphe/mythomist-7b:free.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "google/gemini-flash-1.5-8b",
+        "status": 404,
+        "response": "{\"error\":{\"message\":\"No endpoints found for google/gemini-flash-1.5-8b.\",\"code\":404},\"user_id\":\"user_32W5Vt9Z6KtsKLfU0WyxSOPMZ4u\"}"
+    },
+    {
+        "model": "anthropic/claude-3-haiku",
+        "status": 402,
+        "response": "{\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits"
+    },
+    {
+        "model": "openai/gpt-3.5-turbo",
+        "status": 402,
+        "response": "{\"error\":{\"message\":\"Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits"
+    }
+]

@@ -1,0 +1,68 @@
+--- Recent Audit Logs ---
+ID: 424, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 16:32:06.058026, PatientID: 3
+ID: 423, UserID: 6, Action: Revoked access from Doctor ID: 5, Time: 2026-02-27 16:32:05.987230, PatientID: 3
+ID: 422, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 16:31:28.059858, PatientID: 3
+ID: 421, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 13:07:20.020917, PatientID: 3
+ID: 420, UserID: 5, Action: Viewed patient history, Time: 2026-02-27 13:03:28.628120, PatientID: 3
+ID: 419, UserID: 6, Action: Granted access to Doctor ID: 5, Time: 2026-02-27 13:03:05.391574, PatientID: 3
+ID: 418, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 13:02:39.734365, PatientID: 3
+ID: 417, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 13:01:27.413914, PatientID: 3
+ID: 416, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 11:43:42.528390, PatientID: 3
+ID: 415, UserID: 6, Action: Emergency request for Patient #3, Time: 2026-02-27 11:41:27.037712, PatientID: 3
+ID: 414, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 11:37:12.794296, PatientID: 3
+ID: 413, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 11:23:13.460585, PatientID: 3
+ID: 412, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-27 11:17:41.825393, PatientID: 3
+ID: 411, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-26 13:34:21.517235, PatientID: 3
+ID: 410, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-26 13:26:33.839823, PatientID: 3
+ID: 409, UserID: 6, Action: Emergency request for Patient #3, Time: 2026-02-26 13:25:49.207907, PatientID: 3
+ID: 408, UserID: 6, Action: Emergency request for Patient #3, Time: 2026-02-26 13:25:49.175281, PatientID: 3
+ID: 407, UserID: 6, Action: Emergency request for Patient #3, Time: 2026-02-26 13:25:49.126512, PatientID: 3
+ID: 406, UserID: 6, Action: Patient viewed their own records, Time: 2026-02-26 13:25:38.504018, PatientID: 3
+ID: 405, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 11:53:20.801922, PatientID: 3
+ID: 404, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 10:54:56.188793, PatientID: 3
+ID: 403, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 10:29:36.612279, PatientID: 3
+ID: 402, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 10:12:46.954410, PatientID: 3
+ID: 401, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 10:12:46.694761, PatientID: 3
+ID: 400, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 10:12:46.181733, PatientID: 3
+ID: 399, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 10:12:27.989512, PatientID: 3
+ID: 398, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:59:00.638665, PatientID: 3
+ID: 397, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:58:56.763205, PatientID: 3
+ID: 396, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:42:37.747289, PatientID: 3
+ID: 395, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:33:09.593670, PatientID: 3
+ID: 394, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:32:55.713376, PatientID: 3
+ID: 393, UserID: 6, Action: Revoked access from Doctor ID: 5, Time: 2026-01-31 09:31:31.719238, PatientID: 3
+ID: 392, UserID: 6, Action: Granted access to Doctor ID: 5, Time: 2026-01-31 09:31:27.551725, PatientID: 3
+ID: 391, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:30:13.292636, PatientID: 3
+ID: 390, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:29:48.693759, PatientID: 3
+ID: 389, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 09:23:29.819579, PatientID: 3
+ID: 388, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:54:33.581631, PatientID: 3
+ID: 387, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:51:06.218041, PatientID: 3
+ID: 386, UserID: 6, Action: Uploaded Imaging record, Time: 2026-01-31 08:51:06.168811, PatientID: 3
+ID: 385, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:50:05.661148, PatientID: 3
+ID: 384, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:41:12.937603, PatientID: 3
+ID: 383, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:37:57.979197, PatientID: 3
+ID: 382, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:36:07.492381, PatientID: 3
+ID: 381, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:31:57.989682, PatientID: 3
+ID: 380, UserID: 6, Action: Revoked access from Doctor ID: 5, Time: 2026-01-31 08:23:01.955172, PatientID: 3
+ID: 379, UserID: 6, Action: Granted access to Doctor ID: 5, Time: 2026-01-31 08:22:55.357595, PatientID: 3
+ID: 378, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:11:52.112332, PatientID: 3
+ID: 377, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 08:11:08.032726, PatientID: 3
+ID: 376, UserID: 6, Action: Patient viewed their own records, Time: 2026-01-31 06:24:25.275208, PatientID: 3
+ID: 375, UserID: 6, Action: Revoked access from Doctor ID: 5, Time: 2026-01-31 05:54:58.535531, PatientID: 3
+
+--- Medical Record Details (Patient 3) ---
+ID: 5, visit_date: 2023-10-05 00:00:00, hcw_id: 6, type: Prescription
+Structured Data: {'symptoms': ['Persistent cough', 'Fatigue', 'Rhonchi in left lung', 'Generalized weakness'], 'medications': ['Amoxicillin 500mg (30 tablets, 10-day course, take 1 tablet by mouth to times daily)'], 'summarization': 'This document is a pharmacy prescription for acute bronchitis in a 43-year-old male with symptoms including persistent cough, fatigue, rhonchi in the left lung, and generalized weakness. The clinician recommends a 10-day course of Amoxicillin 500 mg, rest, hydration, and a follow-up in 7 days. The clinical findings suggest a bacterial infection requiring antibiotic treatment.', 'key_points': ['Diagnosis: Acute bronchitis', 'Prescribed: Amoxicillin 500mg, 30 tablets (10-day course)', 'Follow-up: 7 days', 'Symptoms: Cough, fatigue, rhonchi in left lung, generalized weakness']}
+
+ID: 6, visit_date: 2014-12-06 00:00:00, hcw_id: 6, type: Prescription
+Structured Data: {'symptoms': ['neck mass noted 2 weeks prior', 'no pain', 'thyroid mass (right side)'], 'medications': [], 'summarization': 'This is a Manila Doctors Hospital clinical report documenting a thyroid mass evaluation. The patient presented with a painless neck mass noted two weeks prior. Ultrasound revealed a 2.1cm finite thyroid mass on the right side raising suspicion for malignancy. Clinical assessment concluded a suspicious thyroid nodule requiring further diagnostic testing including possible biopsy.', 'key_points': ['Right thyroid mass (2.1cm) finite structure', 'Suspicious for malignancy (non-cancer >40% vs cancer <10%),', 'Clinical correlation needed for diagnosis', 'Recommended biopsy and further diagnostic workup']}
+
+ID: 7, visit_date: 2014-06-12 00:00:00, hcw_id: 6, type: Prescription
+Structured Data: {'symptoms': ['thyroïd mass noted 2 weeks ago', 'right lobe abscess (2.8 cm)'], 'medications': [], 'summarization': 'This is a clinical note from Manila Doctors Hospital documenting evaluation of a 2 cm left thyroid mass found to be solid and non-tender with no evidence of malignancy. A separate right lobe abscess (2.8 cm) was noted with characteristics requiring intervention. The document recommends further diagnostic testing (ultrasound, fine needle aspiration) and long-term monitoring.', 'key_points': ['2 cm left thyroid lobe mass (firm, solid, no tenderness/redness)', 'No cancer confirmed (blood tests and thyroid radioiodine normal)', 'Right lobe abscess requiring intervention (infectious/infected, tender)', 'Recommendation for ultrasound and fine needle aspiration for further evaluation']}
+
+ID: 8, visit_date: 2014-06-12 00:00:00, hcw_id: 6, type: Prescription
+Structured Data: {'symptoms': ['neck mass', 'changing neck mass'], 'medications': ['ultrasound of the thyroid', 'Biopsy needle'], 'summarization': 'This is a clinical consultation note for a patient presenting with a right suboccipital thyroid mass. Physical examination reveals a 2cm solid/well-defined mass with no tenderness or erythema, ruling out infection. The thyroid disorder is classified as non-cancerous based on clinical evaluation. Diagnostic recommendations include thyroid function tests, thyroid-specific antibodies, and a biopsy for definitive diagnosis.', 'key_points': ['2cm right suboccipital thyroid mass confirmed on physical exam', 'No malignancy indicated clinically; non-cancerous classification', 'Order for thyroid ulcer, T3/blood hcg SA TT hcg tt pr, and biopsy', 'Follow-up ultrasound scheduled in 6-8 weeks with ongoing monitoring']}
+
+ID: 9, visit_date: 2023-11-10 00:00:00, hcw_id: 6, type: Imaging
+Structured Data: {'symptoms': ['Knuckle pain', 'Hand swelling', 'Reduced grip strength'], 'medications': ['Ibuprofen 400mg daily', 'Naproxen 250mg PRN'], 'summarization': 'This is a plain radiograph (X-ray) of the left hand showing intact bone structure with no fractures, dislocations, or artifacts. The bony architecture, including phalanges, metacarpals, radius, ulna, and carpals, appears normal. No evidence of acute injury or joint destruction is visible. Soft tissue softness is consistent with a routine diagnostic study.', 'key_points': ['No fractures, dislocations, or bony malformations detected', 'Bone density within normal limits for age', 'Ligament attachments intact (no subluxation/subluxation)', 'No foreign bodies or soft tissue calcifications observed']}
+

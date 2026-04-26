@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 2rem auto;">
+    <div class="glass-card">
+        <div
+            style="display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 2rem;">
+            <div
+                style="width: 100px; height: 100px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                {{ current_user.full_name[0] }}
+            </div>
+            <div>
+                <h2 style="margin: 0;">{{ current_user.full_name }}</h2>
+                <p style="color: #94a3b8; margin: 0.5rem 0;">{{ current_user.role }} | @{{ current_user.username }}</p>
+                <span
+                    style="background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 600;">Verified
+                    Account</span>
+            </div>
+        </div>
+
+        <div class="responsive-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-info-circle"></i> Account Details</h3>
+                <div style="margin-bottom: 1rem;">
+                    <label
+                        style="display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 0.25rem;">Username</label>
+                    <p style="margin: 0;">{{ current_user.username }}</p>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 0.25rem;">Full
+                        Name</label>
+                    <p style="margin: 0;">{{ current_user.full_name }}</p>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 0.25rem;">Role-Based
+                        Access</label>
+                    <p style="margin: 0;">{{ current_user.role }} Permissions</p>
+                </div>
+            </div>
+
+            <div style="border-left: 1px solid var(--glass-border); padding-left: 2rem;">
+                <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-shield-alt"></i> Security & Privacy</h3>
+                <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem;">
+                    Your account is secured with JWT authentication and role-based access control. All patient data
+                    access is audited.
+                </p>
+                <button class="btn btn-outline" style="width: 100%; margin-bottom: 1rem;">Change Password</button>
+                <p style="font-size: 0.7rem; color: #64748b; text-align: center;">Last login: {{ now }} (Approximate)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.role == 'Admin' %}
+    <div class="glass-card" style="margin-top: 2rem;">
+        <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-list-ul"></i> System Audit Logs (Admin Only)</h3>
+        <p style="color: #94a3b8; font-style: italic;">Detailed audit logs feature is currently in production.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

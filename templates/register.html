@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="register-container"
+    style="max-width: 550px; width: 100%; margin: 3rem auto; padding: 0 1rem; box-sizing: border-box;">
+    <div class="glass-card">
+        <h2 style="text-align: center; margin-bottom: 0.5rem; font-family: 'Playfair Display', serif; color: var(--dark);"
+            data-i18n="register_title">
+            Create Professional Account</h2>
+        <p style="text-align: center; margin-bottom: 2rem; color: var(--text-dark); font-size: 0.9rem;"
+            data-i18n="register_subtitle">Join the
+            MedDigit healthcare network</p>
+        <form id="registerForm" method="POST" enctype="multipart/form-data">
+            <div class="registration-grid responsive-grid-2"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);"
+                        data-i18n="full_name">Full
+                        Name</label>
+                    <input type="text" name="full_name" required placeholder="Dr. John Doe">
+                </div>
+                <div>
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);">Username</label>
+                    <input type="text" name="username" required placeholder="johndoe123">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);"
+                        data-i18n="email">Email</label>
+                    <input type="email" name="email" required placeholder="john@example.com">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);">Mobile
+                        Number</label>
+                    <input type="tel" name="contact" required placeholder="+1234567890">
+                </div>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);"
+                    data-i18n="password">Password</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);"
+                    data-i18n="role">Professional
+                    Role</label>
+                <select name="role" id="roleSelect" required onchange="toggleDoctorFields()">
+                    <option value="Doctor" data-i18n="doctor">Doctor</option>
+                    <option value="HCW" data-i18n="hcw_label">Healthcare Worker</option>
+                    <option value="Driver" data-i18n="ambulance_driver">Ambulance Driver</option>
+                    <option value="Patient" data-i18n="patient">Patient</option>
+                </select>
+            </div>
+
+            <!-- Role Specific Fields -->
+            <div id="doctorFields" style="display: none; margin-bottom: 2rem; border-top: 1px dashed var(--glass-border); padding-top: 1.5rem;">
+                <div class="registration-grid responsive-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);">Medical Specialization</label>
+                        <input type="text" name="specialty" placeholder="e.g. Cardiologist">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);">Years of Experience</label>
+                        <input type="number" name="years_of_experience" placeholder="e.g. 10">
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);">Research Areas / Expertise</label>
+                    <textarea name="research_areas" placeholder="Describe your research areas or specialized expertise..." style="width: 100%; min-height: 80px;"></textarea>
+                </div>
+            </div>
+
+            <div id="patientFields" style="display: none; margin-bottom: 2rem; border-top: 1px dashed var(--glass-border); padding-top: 1.5rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark);">Patient Condition (Medical Checkup Document) - Optional</label>
+                    <input type="file" name="condition_document" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="create_account">Create Account</button>
+        </form>
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-dark);">
+            <span data-i18n="already_account">Already have an account?</span> <a href="{{ url_for('auth.login') }}"
+                style="color: var(--primary); font-weight: 600; text-decoration: none;" data-i18n="login">Login
+                here</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    function toggleDoctorFields() {
+        const role = document.getElementById('roleSelect').value;
+        const doctorFields = document.getElementById('doctorFields');
+        const patientFields = document.getElementById('patientFields');
+
+        doctorFields.style.display = (role === 'Doctor') ? 'block' : 'none';
+        patientFields.style.display = (role === 'Patient') ? 'block' : 'none';
+
+        // Clear doctor fields if not a doctor
+        if (role !== 'Doctor') {
+            doctorFields.querySelectorAll('input, textarea').forEach(el => el.value = '');
+        }
+
+        // Clear patient fields if not a patient
+        if (role !== 'Patient') {
+            patientFields.querySelectorAll('input').forEach(el => el.value = '');
+        }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', toggleDoctorFields);
+
+    document.getElementById('registerForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+            const res = await fetch("{{ url_for('auth.register') }}", {
+                method: "POST",
+                headers: { "Accept": "application/json" },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                showSuccess("Account Details Saved! Check your email for OTP.", data.redirect || "{{ url_for('auth.verify_otp', user_id=0) }}");
+            } else {
+                alert(data.error || "Registration failed");
+            }
+        } catch (err) {
+            console.error(err);
+            // If it redirects (not JSON), we might hit an error here depending on cors/etc, 
+            // but for local same-origin it should be fine.
+            // Actually, if the backend returns a redirect, fetch follows it.
+            // I should update the backend to return JSON for AJAX requests.
+        }
+    };
+</script>
+
+<style>
+    @media screen and (max-width: 600px) {
+        .registration-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .register-container {
+            margin: 1.5rem auto !important;
+        }
+    }
+</style>
+{% endblock %}

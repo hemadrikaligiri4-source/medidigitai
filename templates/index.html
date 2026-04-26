@@ -1,0 +1,292 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        text-align: center;
+        padding: 6rem 2rem 4rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .hero h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        font-family: 'Playfair Display', serif;
+        margin-bottom: 1.5rem;
+        color: var(--dark);
+        line-height: 1.2;
+    }
+
+    .hero p {
+        font-size: 1.1rem;
+        color: var(--text-dark);
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    .hero-btns {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 4rem;
+    }
+
+    .btn-hero-primary {
+        background: var(--primary);
+        padding: 1rem 2.5rem;
+        border-radius: 2rem;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(230, 126, 80, 0.3);
+        transition: all 0.3s;
+    }
+
+    .btn-hero-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(230, 126, 80, 0.4);
+    }
+
+    .btn-hero-secondary {
+        background: transparent;
+        padding: 1rem 2.5rem;
+        border-radius: 2rem;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 2px solid var(--primary);
+    }
+
+    .btn-hero-secondary:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .features-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .feature-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        padding: 3rem 2.5rem;
+        border-radius: 1rem;
+        text-align: center;
+        transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+
+    .icon-orange {
+        background: rgba(230, 126, 80, 0.15);
+        color: var(--primary);
+    }
+
+    .icon-pink {
+        background: rgba(232, 165, 192, 0.15);
+        color: var(--secondary);
+    }
+
+    .icon-mint {
+        background: rgba(125, 211, 192, 0.15);
+        color: var(--accent);
+    }
+
+    .feature-card h3 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    .feature-card p {
+        color: var(--text-dark);
+        line-height: 1.6;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .stats-section {
+        background: var(--cream);
+        padding: 4rem 2rem;
+        margin: 4rem 0;
+    }
+
+    .stats-grid {
+        max-width: 900px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 3rem;
+        text-align: center;
+    }
+
+    .stat-card h4 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0;
+        color: var(--primary);
+        font-family: 'Playfair Display', serif;
+    }
+
+    .stat-card p {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-top: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .footer {
+        padding: 3rem 2rem;
+        text-align: center;
+        color: var(--text-dark);
+        opacity: 0.7;
+        border-top: 1px solid var(--border);
+    }
+
+    /* Responsive Adjustments */
+    @media screen and (max-width: 768px) {
+        .hero {
+            padding: 4rem 1rem 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .hero p {
+            font-size: 1rem;
+        }
+
+        .hero-btns {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0 2rem;
+        }
+
+        .btn-hero-primary,
+        .btn-hero-secondary {
+            width: 100%;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+            padding: 1rem;
+        }
+
+        .feature-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .stats-section {
+            padding: 3rem 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .stat-card h4 {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1 data-i18n="hero_title">Digitizing Healthcare for Remote Settings</h1>
+    <p data-i18n="hero_subtitle">Securely bring medical record digitization to remote areas using AI-powered OCR.
+        Designed for field health
+        workers, doctors, and emergency coordinators.</p>
+
+    <div class="hero-btns">
+        <a href="{{ url_for('auth.register') }}" class="btn-hero-primary" data-i18n="get_started">Get Started</a>
+        <a href="#features" class="btn-hero-secondary" data-i18n="learn_more">Learn More</a>
+    </div>
+</section>
+
+<section id="features" class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon icon-orange">
+            <i class="fas fa-camera"></i>
+        </div>
+        <h3 data-i18n="easy_capture">Easy Capture</h3>
+        <p data-i18n="easy_capture_desc">Upload medical documents via camera or file upload. Our system handles
+            prescriptions, lab reports, and
+            clinical notes.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon icon-pink">
+            <i class="fas fa-brain"></i>
+        </div>
+        <h3 data-i18n="ai_insights">AI Insights</h3>
+        <p data-i18n="ai_insights_desc">Automatic extraction of symptoms, medications, and patient history using
+            advanced OCR and natural language
+            processing.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon icon-mint">
+            <i class="fas fa-ambulance"></i>
+        </div>
+        <h3 data-i18n="emergency_sync">Emergency Sync</h3>
+        <p data-i18n="emergency_sync_desc">Real-time coordination with ambulance drivers using GPS tracking and instant
+            notifications for critical
+            situations.</p>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h4>10k+</h4>
+            <p data-i18n="records_digitized">Records Digitized</p>
+        </div>
+        <div class="stat-card">
+            <h4>2sec</h4>
+            <p data-i18n="ocr_processing">OCR Processing</p>
+        </div>
+        <div class="stat-card">
+            <h4>100%</h4>
+            <p data-i18n="secure_storage">Secure Storage</p>
+        </div>
+    </div>
+</section>
+
+<section class="footer">
+    <p data-i18n="footer_text">Developed for humanitarian and remote clinical excellence. All rights reserved © 2026
+        MedDigit AI Team.</p>
+</section>
+{% endblock %}
