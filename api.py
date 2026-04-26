@@ -3,7 +3,7 @@ import csv
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from models import Patient, MedicalRecord, db, User, DoctorPatientAccess, PatientVitals
+from models import Patient, MedicalRecord, db, User, DoctorPatientAccess, PatientVitals, Announcement
 from ocr_engine import OCREngine
 from datetime import datetime
 import json
@@ -947,3 +947,38 @@ def get_admin_stats():
         "total_doctors": total_doctors,
         "total_records": total_records
     })
+
+@api.route('/post_announcement', methods=['POST'])
+@login_required
+def post_announcement():
+    if current_user.role != 'Doctor':
+        return jsonify({"error": "Only doctors can post announcements"}), 403
+        
+    data = request.json
+    message = data.get('message')
+    contact_info = data.get('contact_info')
+    
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+        
+    new_announcement = Announcement(
+        doctor_id=current_user.id,
+        message=message,
+        contact_info=contact_info
+    )
+    db.session.add(new_announcement)
+    db.session.commit()
+    
+    return jsonify({"message": "Announcement posted successfully"})
+
+@api.route('/announcements', methods=['GET'])
+@login_required
+def get_announcements():
+    announcements = Announcement.query.order_by(Announcement.created_at.desc()).limit(10).all()
+    return jsonify([{
+        "id": a.id,
+        "doctor_name": a.doctor.full_name,
+        "message": a.message,
+        "contact_info": a.contact_info,
+        "created_at": a.created_at.strftime('%Y-%m-%d %H:%M')
+    } for a in announcements])
