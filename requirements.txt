@@ -20,3 +20,9 @@ gevent-websocket
 requests
 gunicorn
 itsdangerous
+# ── New Integrations (MongoDB Atlas + Auth0 + Gemma) ──
+pymongo[srv]
+authlib
+google-generativeai
+httpx
+

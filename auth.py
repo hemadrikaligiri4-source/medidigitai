@@ -250,3 +250,70 @@ def change_email(user_id):
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
+
+# ── Auth0 Social Login Routes (Additive) ──────────────────────────────────────
+from auth0_helper import get_auth0
+
+@auth.route('/auth/auth0')
+def auth0_login():
+    """Redirects user to Auth0 login page"""
+    auth0 = get_auth0()
+    if not auth0:
+        flash("Auth0 is not configured yet.", "error")
+        return redirect(url_for('auth.login'))
+    
+    redirect_uri = os.environ.get("AUTH0_CALLBACK_URL", url_for('auth.auth0_callback', _external=True))
+    return auth0.authorize_redirect(redirect_uri=redirect_uri)
+
+@auth.route('/auth/auth0/callback')
+def auth0_callback():
+    """Handles callback from Auth0 and logs user in"""
+    auth0 = get_auth0()
+    if not auth0:
+        return redirect(url_for('auth.login'))
+        
+    try:
+        token = auth0.authorize_access_token()
+        user_info = token.get('userinfo')
+        
+        email = user_info.get('email')
+        name = user_info.get('name')
+        
+        if not email:
+            flash("Auth0 login failed: No email provided by provider.", "error")
+            return redirect(url_for('auth.login'))
+            
+        # Find or create user
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            # Create a basic Patient user if they don't exist
+            # Note: A real app might ask for more details like Role, but we default to Patient
+            from werkzeug.security import generate_password_hash
+            user = User(
+                username=email, # use email as username
+                email=email,
+                password_hash=generate_password_hash(os.urandom(24).hex()), # random password
+                role="Patient",
+                full_name=name,
+                email_verified=True
+            )
+            db.session.add(user)
+            db.session.flush()
+            
+            # Create placeholder Patient record
+            from models import Patient
+            new_patient = Patient(name=name, user_id=user.id, has_consent=True)
+            db.session.add(new_patient)
+            
+            db.session.commit()
+            
+        # Log them in via Flask-Login
+        login_user(user)
+        flash(f"Welcome back, {user.full_name}!", "success")
+        return redirect(url_for('main.dashboard'))
+        
+    except Exception as e:
+        print(f"Auth0 callback error: {e}")
+        flash("Social login failed. Please try again or use email.", "error")
+        return redirect(url_for('auth.login'))
+

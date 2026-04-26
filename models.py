@@ -98,3 +98,14 @@ class PatientVitals(db.Model):
     notes = db.Column(db.String(200))
 
     patient = db.relationship('Patient', backref=db.backref('vitals_history', lazy=True))
+
+class Announcement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    contact_info = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship to get doctor details
+    doctor = db.relationship('User', backref=db.backref('announcements', lazy=True))
+

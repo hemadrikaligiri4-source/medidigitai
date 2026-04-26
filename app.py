@@ -40,6 +40,11 @@ def create_app():
     socketio.init_app(app)
     mail.init_app(app)
     
+    # ── Auth0 Social Login (additive — existing login unchanged) ──────────────
+    from auth0_helper import register_auth0
+    register_auth0(app)
+
+    
     login_manager.login_view = 'auth.login'
     
     @login_manager.user_loader
@@ -62,7 +67,7 @@ def create_app():
         app.register_blueprint(main_blueprint)
         app.register_blueprint(api_blueprint, url_prefix='/api')
         
-        from models import User, Patient, MedicalRecord, Ambulance, EmergencyRequest, AuditLog
+        from models import User, Patient, MedicalRecord, Ambulance, EmergencyRequest, AuditLog, Announcement
         db.create_all()
         
     # WebSocket Events

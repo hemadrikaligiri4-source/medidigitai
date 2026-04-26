@@ -24,6 +24,19 @@
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="login">Sign In</button>
         </form>
+        
+        <!-- Additive: Auth0 Login Button -->
+        <div style="text-align: center; margin: 1.5rem 0; position: relative;">
+            <hr style="border: none; border-top: 1px solid var(--border);">
+            <span style="position: absolute; top: -0.7rem; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 0 1rem; color: var(--text-dark); font-size: 0.9rem;">or</span>
+        </div>
+        <a href="{{ url_for('auth.auth0_login') }}" class="btn" style="width: 100%; background: #fff; color: #333; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">
+            <svg viewBox="0 0 32 32" width="20" height="20">
+                <path fill="#eb5424" d="M16 0.031c-8.834 0-16 7.166-16 16s7.166 16 16 16 16-7.166 16-16-7.166-16-16-16zM24.896 22.427l-5.698-8.172h-6.396l-5.703 8.172c-1.391-1.745-2.224-3.953-2.224-6.365 0-5.615 4.547-10.161 10.161-10.161s10.161 4.547 10.161 10.161c0 2.411-0.833 4.62-2.302 6.365z"></path>
+            </svg>
+            Sign in with Auth0
+        </a>
+
         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-dark);">
             <span data-i18n="no_account">Don't have an account?</span> <a href="{{ url_for('auth.register') }}"
                 style="color: var(--primary); font-weight: 600; text-decoration: none;" data-i18n="sign_up">Register

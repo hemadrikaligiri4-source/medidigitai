@@ -140,6 +140,14 @@ def upload_record():
     db.session.add(log)
     db.session.commit()
     
+    # ── Additive: MongoDB Atlas Cache ─────────────────────────────────────────
+    try:
+        from mongo_client import cache_ai_analysis
+        cache_ai_analysis(new_record.id, patient_id, ai_result)
+    except Exception as e:
+        print(f"MongoDB cache skipped: {e}")
+    # ──────────────────────────────────────────────────────────────────────────
+    
     return jsonify({
         "message": "Record uploaded and digitized",
         "structured_data": structured_data,
@@ -213,6 +221,15 @@ def chatbot():
                 ai_data = response.json()
                 if 'choices' in ai_data and len(ai_data['choices']) > 0:
                     ai_response = ai_data['choices'][0]['message']['content']
+                    
+                    # ── Additive: MongoDB Atlas Chat Logging ──────────────────────
+                    try:
+                        from mongo_client import log_chat_message
+                        log_chat_message(current_user.id, message, ai_response, model)
+                    except Exception as e:
+                        print(f"MongoDB log skipped: {e}")
+                    # ──────────────────────────────────────────────────────────────
+                    
                     return jsonify({"response": ai_response})
             elif response.status_code == 429:
                 print(f"Rate limit on {model}, trying next...")
@@ -982,3 +999,32 @@ def get_announcements():
         "contact_info": a.contact_info,
         "created_at": a.created_at.strftime('%Y-%m-%d %H:%M')
     } for a in announcements])
+
+# ── Additive: Gemma LLM Endpoint ──────────────────────────────────────────────
+@api.route('/gemma_chat', methods=['POST'])
+@login_required
+def gemma_chat():
+    from flask import session
+    from gemma_engine import gemma_medical_analysis
+    from mongo_client import log_chat_message
+    
+    data = request.json
+    message = data.get('message', '')
+    lang_code = data.get('language') or session.get('selected_language', 'en')
+    
+    lang_names = {'en': 'English', 'te': 'Telugu', 'hi': 'Hindi', 'ta': 'Tamil'}
+    target_lang = lang_names.get(lang_code, 'English')
+    
+    if not message:
+        return jsonify({"response": "Please say something!"})
+        
+    result = gemma_medical_analysis(message, target_lang)
+    
+    # Log to MongoDB
+    try:
+        log_chat_message(current_user.id, message, result["response"], result["model"])
+    except Exception as e:
+        print(f"MongoDB log skipped: {e}")
+        
+    return jsonify({"response": result["response"]})
+
