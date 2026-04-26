@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
+
 from flask import Flask
 from extensions import db, login_manager, jwt, socketio, mail
 from datetime import timedelta
