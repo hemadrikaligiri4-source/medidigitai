@@ -555,46 +555,41 @@ def suggest_schemes():
     prompt_context = "\n".join(health_summary)
     card_info = f"Health Card Type: {patient.health_card_type}, Number: {patient.health_card_number}" if patient.health_card_type else "No existing health card linked."
     
-    # AI Request for schemes
-    OPENROUTER_API_KEY = "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"
-    API_URL = "https://openrouter.ai/api/v1/chat/completions"
+    # AI Request for schemes using Gemma
+    from gemma_engine import _get_client
+    import json
     
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "model": "arcee-ai/trinity-large-preview:free",
-        "messages": [
-            {"role": "system", "content": f"You are a Government Health Scheme Expert. Based on the patient's medical history and current health card details, identify 3-4 relevant Indian Government health schemes. \n\nCRITICAL: You MUST use ONLY official verified government portal URLs. If you are unsure, use the main ministry portal (mohfw.gov.in). \n\nLANGUAGE RULE: You MUST provide the response (title, relevance, benefits, how_to_apply) in {target_lang}.\n\nVerified Link Reference:\n- Ayushman Bharat (PM-JAY): https://pmjay.gov.in/\n- PMSSY (Pradhan Mantri Swasthya Suraksha Yojana): https://pmssy-mohfw.nic.in/\n- Arogyasri (Telangana): https://aarogyasri.telangana.gov.in/\n- Arogyasri (Andhra Pradesh): https://www.ysraarogyasri.ap.gov.in/\n- CGHS (Central Govt Health Scheme): https://cghs.gov.in/\n- National Health Mission (NHM): https://nhm.gov.in/\n\nProvide the response in valid JSON format as a list of objects, each with 'title', 'relevance', 'benefits', 'how_to_apply', and 'portal_url' (the official government website link for the scheme). Do not include any text outside the JSON block."},
-            {"role": "user", "content": f"Patient Medical History Summary:\n{prompt_context}\n\nPatient Card Info:\n{card_info}"}
-        ],
-        "response_format": { "type": "json_object" }
-    }
-    
-    import requests
+    genai = _get_client()
+    if not genai:
+        return jsonify({"error": "Gemma AI is not configured."}), 500
+        
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=15)
-        if response.status_code == 200:
-            result = response.json()
-            content = result['choices'][0]['message']['content']
-            # Sometimes AI wraps in markdown blocks
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
-            
-            schemes_data = json.loads(content)
-            # Ensure it handles both {"schemes": [...]} and [...]
-            if isinstance(schemes_data, dict) and "schemes" in schemes_data:
-                return jsonify({"schemes": schemes_data["schemes"]})
-            return jsonify({"schemes": schemes_data})
-        else:
-            print(f"AI Scheme Error: {response.status_code} - {response.text}")
-            return jsonify({"error": "Could not generate scheme suggestions at this time."}), 500
+        system_instruction = f"You are a Government Health Scheme Expert. Based on the patient's medical history and current health card details, identify 3-4 relevant Indian Government health schemes. \n\nCRITICAL: You MUST use ONLY official verified government portal URLs. If you are unsure, use the main ministry portal (mohfw.gov.in). \n\nLANGUAGE RULE: You MUST provide the response (title, relevance, benefits, how_to_apply) in {target_lang}.\n\nVerified Link Reference:\n- Ayushman Bharat (PM-JAY): https://pmjay.gov.in/\n- PMSSY (Pradhan Mantri Swasthya Suraksha Yojana): https://pmssy-mohfw.nic.in/\n- Arogyasri (Telangana): https://aarogyasri.telangana.gov.in/\n- Arogyasri (Andhra Pradesh): https://www.ysraarogyasri.ap.gov.in/\n- CGHS (Central Govt Health Scheme): https://cghs.gov.in/\n- National Health Mission (NHM): https://nhm.gov.in/"
+        
+        prompt = f"Patient Medical History Summary:\n{prompt_context}\n\nPatient Card Info:\n{card_info}\n\nProvide the response in valid JSON format as a list of objects, each with 'title', 'relevance', 'benefits', 'how_to_apply', and 'portal_url' (the official government website link for the scheme). Do not include any text outside the JSON block."
+        
+        model = genai.GenerativeModel(
+            "gemini-2.0-flash",
+            system_instruction=system_instruction,
+            generation_config={"response_mime_type": "application/json"}
+        )
+        
+        response = model.generate_content(prompt)
+        content = response.text
+        
+        # Clean up markdown if necessary
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+        
+        schemes_data = json.loads(content)
+        if isinstance(schemes_data, dict) and "schemes" in schemes_data:
+            return jsonify({"schemes": schemes_data["schemes"]})
+        return jsonify({"schemes": schemes_data})
+        
     except Exception as e:
-        print(f"Scheme generation exception: {e}")
+        print(f"Scheme generation exception with Gemma: {e}")
         return jsonify({"error": "Processing error"}), 500
 @api.route('/suggest_doctors', methods=['GET'])
 @login_required
@@ -638,31 +633,34 @@ def suggest_doctors():
     if not doctor_list:
         return jsonify({"message": "No doctors available in the network yet."})
 
-    # AI Request for recommendations
-    OPENROUTER_API_KEY = "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"
-    
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
+    # AI Request for recommendations using Gemma
+    from gemma_engine import _get_client
     import json
-    payload = {
-        "model": "arcee-ai/trinity-large-preview:free",
-        "messages": [
-            {"role": "system", "content": f"You are a Medical Matchmaking AI. Based on the patient's medical history and the list of available doctors, recommend 2-3 specific doctors who best match the patient's needs. Explain why each doctor is a good fit.\n\nLANGUAGE RULE: You MUST provide the response (doctor_name, specialty, recommendation_reason) in {target_lang}.\n\nProvide response in valid JSON format as a list of objects: {{'doctor_id', 'doctor_name', 'specialty', 'recommendation_reason', 'match_score' (0-100)}}. Do not include text outside JSON."},
-            {"role": "user", "content": f"Patient Health History:\n{prompt_context}\n\nAvailable Doctors:\n{json.dumps(doctor_list)}"}
-        ],
-        "response_format": { "type": "json_object" }
-    }
     
-    try:
-        import requests
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-        ai_data = response.json()
+    genai = _get_client()
+    if not genai:
+        return jsonify({"error": "Gemma AI is not configured."}), 500
         
-        # Check if the AI returned the expected structure
-        content = ai_data['choices'][0]['message']['content']
+    try:
+        system_instruction = f"You are a Medical Matchmaking AI. Based on the patient's medical history and the list of available doctors, recommend 2-3 specific doctors who best match the patient's needs. Explain why each doctor is a good fit.\n\nLANGUAGE RULE: You MUST provide the response (doctor_name, specialty, recommendation_reason) in {target_lang}.\n\nProvide response in valid JSON format as a list of objects: {{'doctor_id', 'doctor_name', 'specialty', 'recommendation_reason', 'match_score' (0-100)}}. Do not include text outside JSON."
+        
+        prompt = f"Patient Health History:\n{prompt_context}\n\nAvailable Doctors:\n{json.dumps(doctor_list)}"
+        
+        model = genai.GenerativeModel(
+            "gemini-2.0-flash",
+            system_instruction=system_instruction,
+            generation_config={"response_mime_type": "application/json"}
+        )
+        
+        response = model.generate_content(prompt)
+        content = response.text
+        
+        # Clean up markdown if necessary
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
+            
         recommendations = json.loads(content)
         
         # Handle different possible JSON structures from AI
@@ -674,7 +672,7 @@ def suggest_doctors():
         return jsonify({"recommendations": recommendations})
         
     except Exception as e:
-        print(f"AI Suggestion Error: {e}")
+        print(f"AI Suggestion Error with Gemma: {e}")
         return jsonify({"error": "Failed to generate AI recommendations"}), 500
 
 @api.route('/symptom_checker', methods=['POST'])
@@ -692,44 +690,39 @@ def symptom_checker():
 
     symptoms_text = ", ".join(symptoms)
     
-    # OpenRouter Configuration
-    OPENROUTER_API_KEY = "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"
-    API_URL = "https://openrouter.ai/api/v1/chat/completions"
+    # AI Request for symptom analysis using Gemma
+    from gemma_engine import _get_client
+    import json
     
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "model": "arcee-ai/trinity-large-preview:free",
-        "messages": [
-            {"role": "system", "content": f"You are a medical symptom analyzer AI. Based on the selected symptoms, provide a structured response including possible conditions, health guidance, and a mandatory disclaimer. \n\nCRITICAL: You MUST respond ONLY in {target_lang}. \n\nProvide the response in valid JSON format with the following keys: 'possible_conditions' (list of strings), 'health_guidance' (list of strings), and 'disclaimer' (string). The disclaimer MUST state that this is NOT a medical diagnosis and the user should consult a doctor. Do not include any text outside the JSON block."},
-            {"role": "user", "content": f"Symptoms: {symptoms_text}"}
-        ],
-        "response_format": { "type": "json_object" }
-    }
-    
+    genai = _get_client()
+    if not genai:
+        return jsonify({"error": "Gemma AI is not configured."}), 500
+        
     try:
-        import requests
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=15)
-        if response.status_code == 200:
-            result = response.json()
-            content = result['choices'][0]['message']['content']
+        system_instruction = f"You are a medical symptom analyzer AI. Based on the selected symptoms, provide a structured response including possible conditions, health guidance, and a mandatory disclaimer. \n\nCRITICAL: You MUST respond ONLY in {target_lang}. \n\nProvide the response in valid JSON format with the following keys: 'possible_conditions' (list of strings), 'health_guidance' (list of strings), and 'disclaimer' (string). The disclaimer MUST state that this is NOT a medical diagnosis and the user should consult a doctor. Do not include any text outside the JSON block."
+        
+        prompt = f"Symptoms: {symptoms_text}"
+        
+        model = genai.GenerativeModel(
+            "gemini-2.0-flash",
+            system_instruction=system_instruction,
+            generation_config={"response_mime_type": "application/json"}
+        )
+        
+        response = model.generate_content(prompt)
+        content = response.text
+        
+        # Clean up markdown if necessary
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0].strip()
             
-            # Clean up markdown if necessary
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
-            
-            analysis_data = json.loads(content)
-            return jsonify(analysis_data)
-        else:
-            print(f"Symptom Checker Error: {response.status_code} - {response.text}")
-            return jsonify({"error": "AI service error. Please try again later."}), 500
+        analysis_data = json.loads(content)
+        return jsonify(analysis_data)
+        
     except Exception as e:
-        print(f"Symptom Checker exception: {e}")
+        print(f"Symptom Checker exception with Gemma: {e}")
         return jsonify({"error": "Failed to analyze symptoms"}), 500
 
 @api.route('/save_vitals', methods=['POST'])
