@@ -127,4 +127,4 @@ Ready for one-click deployment to **Render** via `render.yaml`:
 Licensed under the **MIT License**.
 
 ---
-&copy; 2026 MedDigit AI | Engineering for Life.
+&copy; April 26, 2026 MedDigit AI | Engineering for Life.
